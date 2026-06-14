@@ -1,0 +1,69 @@
+/**
+ * Eastman Trial ships broken / watermarked digit glyphs.
+ * Load letters from Eastman with unicode-range excluding 0-9,
+ * and render numerals via a clean system-ui fallback.
+ */
+
+@font-face {
+  font-family: 'Eastman Latin';
+  font-style: normal;
+  font-weight: 400;
+  src: url('https://fonts.cdnfonts.com/s/44711/EastmanTrial-Regular.woff') format('woff');
+  unicode-range: U+0000-002F, U+003A-10FFFF;
+}
+
+@font-face {
+  font-family: 'Eastman Latin';
+  font-style: italic;
+  font-weight: 400;
+  src: url('https://fonts.cdnfonts.com/s/44711/EastmanTrial-Italic.woff') format('woff');
+  unicode-range: U+0000-002F, U+003A-10FFFF;
+}
+
+@font-face {
+  font-family: 'Eastman Latin';
+  font-style: normal;
+  font-weight: 600;
+  src: url('https://fonts.cdnfonts.com/s/44711/EastmanTrial-Bold.woff') format('woff');
+  unicode-range: U+0000-002F, U+003A-10FFFF;
+}
+
+@font-face {
+  font-family: 'Eastman Latin';
+  font-style: italic;
+  font-weight: 600;
+  src: url('https://fonts.cdnfonts.com/s/44711/EastmanTrial-BoldItalic.woff') format('woff');
+  unicode-range: U+0000-002F, U+003A-10FFFF;
+}
+
+@font-face {
+  font-family: 'Eastman Latin';
+  font-style: normal;
+  font-weight: 700;
+  src: url('https://fonts.cdnfonts.com/s/44711/EastmanTrial-Extrabold.woff') format('woff');
+  unicode-range: U+0000-002F, U+003A-10FFFF;
+}
+
+@font-face {
+  font-family: 'Eastman Latin';
+  font-style: normal;
+  font-weight: 800;
+  src: url('https://fonts.cdnfonts.com/s/44711/EastmanTrial-Black.woff') format('woff');
+  unicode-range: U+0000-002F, U+003A-10FFFF;
+}
+
+@font-face {
+  font-family: 'Eastman Figures';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Segoe UI'), local('Helvetica Neue'), local('Arial'), local('sans-serif');
+  unicode-range: U+0030-0039;
+}
+
+@font-face {
+  font-family: 'Eastman Figures';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Segoe UI Semibold'), local('Segoe UI'), local('Helvetica Neue'), local('Arial'), local('sans-serif');
+  unicode-range: U+0030-0039;
+}

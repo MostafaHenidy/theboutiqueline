@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(sleep 4 && cat /tmp/vite-dev.log)",
+      "Read(//private/tmp/**)"
+    ]
+  }
+}

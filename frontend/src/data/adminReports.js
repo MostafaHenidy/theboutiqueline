@@ -1,0 +1,216 @@
+/**
+ * Shopify-style reports catalog for admin analytics.
+ * `widget` links to data rendered in AdminReportView:
+ *   phase2.* | core.* | report.*
+ */
+export const REPORT_CATEGORIES = [
+  'Acquisition',
+  'Behavior',
+  'Customers',
+  'Finances',
+  'Fraud',
+  'Inventory',
+  'Marketing',
+  'Orders',
+  'Profit Margin',
+  'Sales',
+];
+
+export const ADMIN_REPORTS = [
+  // Acquisition
+  { slug: 'sessions-by-location', name: 'Sessions by location', category: 'Acquisition', widget: 'phase2.sessionsByLocation' },
+  { slug: 'sessions-by-referrer', name: 'Sessions by referrer', category: 'Acquisition', widget: 'phase2.sessionsByReferrer' },
+  { slug: 'sessions-by-social-referrer', name: 'Sessions by social referrer', category: 'Acquisition', widget: 'phase2.sessionsBySocialReferrer' },
+  { slug: 'sessions-over-time', name: 'Sessions over time', category: 'Acquisition', widget: 'phase2.sessionsOverTime' },
+  { slug: 'visitors-over-time', name: 'Visitors over time', category: 'Acquisition', widget: 'phase2.sessionsOverTime' },
+  { slug: 'visitors-right-now', name: 'Visitors right now', category: 'Acquisition', widget: 'report.visitorsRightNow', liveView: true },
+  { slug: 'total-sales-by-referrer', name: 'Total sales by referrer', category: 'Acquisition', widget: 'phase2.salesByReferrer' },
+  { slug: 'total-sales-by-social-referrer', name: 'Total sales by social referrer', category: 'Acquisition', widget: 'phase2.salesBySocialReferrer' },
+  { slug: 'performance-by-referring-channel', name: 'Performance by referring channel', category: 'Acquisition', widget: 'phase2.performanceByChannel' },
+
+  // Behavior
+  { slug: 'bounce-rate-over-time', name: 'Bounce rate over time', category: 'Behavior', widget: 'report.bounceRateOverTime' },
+  { slug: 'checkout-conversion-rate-over-time', name: 'Checkout conversion rate over time', category: 'Behavior', widget: 'phase2.conversionOverTime' },
+  { slug: 'conversion-rate-breakdown', name: 'Conversion rate breakdown', category: 'Behavior', widget: 'phase2.conversionFunnel' },
+  { slug: 'conversion-rate-over-time', name: 'Conversion rate over time', category: 'Behavior', widget: 'phase2.conversionOverTime' },
+  { slug: 'customer-behavior', name: 'Customer behavior', category: 'Behavior', widget: 'report.customerBehavior' },
+  { slug: 'product-recommendation-conversions-over-time', name: 'Product recommendation conversions over time', category: 'Behavior', widget: 'report.productRecommendationConversionsOverTime' },
+  { slug: 'product-recommendation-low-engagement-products', name: 'Product recommendation low engagement products', category: 'Behavior', widget: 'report.productRecommendationLowEngagement' },
+  { slug: 'product-recommendation-performance', name: 'Product recommendation performance', category: 'Behavior', widget: 'report.productRecommendationPerformance' },
+  { slug: 'product-recommendation-searches-with-low-engagement', name: 'Product recommendation searches with low engagement', category: 'Behavior', widget: 'report.productRecommendationSearchesLowEngagement' },
+  { slug: 'product-recommendation-searches-with-low-product-conversion', name: 'Product recommendation searches with low product conversion', category: 'Behavior', widget: 'report.productRecommendationSearchesLowConversion' },
+  { slug: 'product-recommendations-with-low-engagement', name: 'Product recommendations with low engagement', category: 'Behavior', widget: 'report.productRecommendationsWithLowEngagement' },
+  { slug: 'search-conversions-over-time', name: 'Search conversions over time', category: 'Behavior', widget: 'report.searchConversionsOverTime' },
+  { slug: 'searches-by-search-query', name: 'Searches by search query', category: 'Behavior', widget: 'report.searchesByQuery' },
+  { slug: 'searches-with-no-clicks', name: 'Searches with no clicks', category: 'Behavior', widget: 'report.searchesWithNoClicks' },
+  { slug: 'searches-with-no-results', name: 'Searches with no results', category: 'Behavior', widget: 'report.searchesWithNoResults' },
+  { slug: 'sessions-with-cart-additions', name: 'Sessions with cart additions', category: 'Behavior', widget: 'report.sessionsWithCartAdditions' },
+  { slug: 'sessions-by-device-type', name: 'Sessions by device type', category: 'Behavior', widget: 'phase2.sessionsByDevice' },
+  { slug: 'sessions-by-landing-page', name: 'Sessions by landing page', category: 'Behavior', widget: 'core.landingPageSessions' },
+  { slug: 'shop-campaign-roas', name: 'Shop Campaign ROAS', category: 'Behavior', widget: 'report.shopCampaignRoas' },
+  { slug: 'products-by-sell-through-rate', name: 'Products by sell-through rate', category: 'Behavior', widget: 'core.sellThrough' },
+
+  // Customers
+  { slug: 'customer-cohort-analysis', name: 'Customer cohort analysis', category: 'Customers', widget: 'core.customerCohorts' },
+  { slug: 'customers-by-location', name: 'Customers by location', category: 'Customers', widget: 'core.salesByLocation' },
+  { slug: 'new-customer-sales-over-time', name: 'New customer sales over time', category: 'Customers', widget: 'report.newCustomerSalesOverTime' },
+  { slug: 'new-customers-over-time', name: 'New customers over time', category: 'Customers', widget: 'report.newCustomersOverTime' },
+  { slug: 'new-vs-returning-customers', name: 'New vs returning customers', category: 'Customers', widget: 'report.newVsReturningCustomers' },
+  { slug: 'one-time-customers', name: 'One-time customers', category: 'Customers', widget: 'report.oneTimeCustomers' },
+  { slug: 'predicted-spend-tiers', name: 'Predicted spend tiers', category: 'Customers', widget: 'report.predictedSpendTiers' },
+  { slug: 'returning-customer-rate-over-time', name: 'Returning customer rate over time', category: 'Customers', widget: 'core.returningCustomerRate' },
+  { slug: 'returning-customers', name: 'Returning customers', category: 'Customers', widget: 'report.returningCustomers' },
+  { slug: 'rfm-customer-analysis', name: 'RFM customer analysis', category: 'Customers', widget: 'report.rfmCustomerAnalysis' },
+  { slug: 'rfm-customer-list', name: 'RFM customer list', category: 'Customers', widget: 'report.rfmCustomerList' },
+
+  // Finances
+  { slug: 'chargeback-rate', name: 'Chargeback rate', category: 'Finances', widget: 'report.chargebackRate' },
+  { slug: 'cost-of-goods-sold-by-order', name: 'Cost of goods sold by order', category: 'Finances', widget: 'report.cogsByOrder' },
+  { slug: 'discounts-by-order', name: 'Discounts by order', category: 'Finances', widget: 'report.discountsByOrder' },
+  { slug: 'finance-summary', name: 'Finance Summary', category: 'Finances', widget: 'core.salesBreakdown' },
+  { slug: 'gross-profit-breakdown', name: 'Gross profit breakdown', category: 'Finances', widget: 'core.salesBreakdown' },
+  { slug: 'gross-profit-by-order', name: 'Gross profit by order', category: 'Finances', widget: 'report.grossProfitByOrder' },
+  { slug: 'gross-sales-by-order', name: 'Gross sales by order', category: 'Finances', widget: 'report.grossSalesByOrder' },
+  { slug: 'managed-markets-taxes', name: 'Managed Markets taxes', category: 'Finances', widget: 'report.managedMarketsTaxes' },
+  { slug: 'net-payments-by-gateway', name: 'Net payments by gateway', category: 'Finances', widget: 'core.salesByChannel' },
+  { slug: 'net-payments-by-method', name: 'Net payments by method', category: 'Finances', widget: 'core.salesByChannel' },
+  { slug: 'net-payments-by-order', name: 'Net payments by order', category: 'Finances', widget: 'report.netPaymentsByOrder' },
+  { slug: 'net-payments-over-time', name: 'Net payments over time', category: 'Finances', widget: 'core.salesOverTime' },
+  { slug: 'net-sales-by-order', name: 'Net sales by order', category: 'Finances', widget: 'report.netSalesByOrder' },
+  { slug: 'net-sales-from-gift-cards', name: 'Net sales from gift cards', category: 'Finances', widget: 'report.giftCardSales' },
+  { slug: 'net-sales-with-cost-by-order', name: 'Net sales with cost by order', category: 'Finances', widget: 'report.cogsByOrder' },
+  { slug: 'net-sales-without-cost-by-order', name: 'Net sales without cost by order', category: 'Finances', widget: 'report.netSalesByOrder' },
+  { slug: 'outstanding-gift-card-balance', name: 'Outstanding gift card balance', category: 'Finances', widget: 'report.giftCardBalance' },
+  { slug: 'total-sales-over-time', name: 'Total sales over time', category: 'Finances', widget: 'core.salesOverTime' },
+  { slug: 'average-order-value-over-time', name: 'Average order value over time', category: 'Finances', widget: 'core.aovOverTime' },
+  { slug: 'total-sales-by-product', name: 'Total sales by product', category: 'Finances', widget: 'core.salesByProduct' },
+
+  // Fraud
+  { slug: 'fraud-acceptance-rate', name: 'Acceptance rate', category: 'Fraud', widget: 'report.fraudAcceptanceRate' },
+  { slug: 'canceled-due-to-fraud', name: 'Canceled due to fraud', category: 'Fraud', widget: 'report.ordersOverTime' },
+  { slug: 'chargeback-amount-fraud', name: 'Chargeback amount (fraud)', category: 'Fraud', widget: 'report.fraudChargebackAmount' },
+  { slug: 'chargeback-rate-fraud', name: 'Chargeback rate (fraud)', category: 'Fraud', widget: 'report.chargebackRate' },
+  { slug: 'high-risk-orders-rate', name: 'High risk orders rate', category: 'Fraud', widget: 'report.chargebackRate' },
+
+  // Inventory
+  { slug: 'abc-product-analysis', name: 'ABC product analysis', category: 'Inventory', widget: 'core.salesByProduct' },
+  { slug: 'inventory-acceptance-rate', name: 'Acceptance rate', category: 'Inventory', widget: 'report.fraudAcceptanceRate' },
+  { slug: 'inventory-adjustment-changes', name: 'Inventory adjustment changes', category: 'Inventory', widget: 'report.inventoryUnavailable' },
+  { slug: 'inventory-adjustments-by-count', name: 'Inventory adjustments by count', category: 'Inventory', widget: 'report.inventoryUnavailable' },
+  { slug: 'inventory-sold-daily-by-product', name: 'Inventory sold daily by product', category: 'Inventory', widget: 'core.salesByProduct' },
+  { slug: 'inventory-transfer-orders-and-shipments', name: 'Inventory transfer orders and shipments', category: 'Inventory', widget: 'report.inventoryUnavailable' },
+  { slug: 'inventory-transfers', name: 'Inventory transfers', category: 'Inventory', widget: 'report.inventoryUnavailable' },
+  { slug: 'month-end-inventory-snapshot', name: 'Month-end inventory snapshot', category: 'Inventory', widget: 'core.sellThrough' },
+  { slug: 'month-end-inventory-value', name: 'Month-end inventory value', category: 'Inventory', widget: 'core.salesBreakdown' },
+  { slug: 'products-by-days-of-inventory-remaining', name: 'Products by days of inventory remaining', category: 'Inventory', widget: 'core.sellThrough' },
+  { slug: 'products-by-percentage-sold', name: 'Products by percentage sold', category: 'Inventory', widget: 'core.sellThrough' },
+  { slug: 'inventory-products-by-sell-through-rate', name: 'Products by sell-through rate', category: 'Inventory', widget: 'core.sellThrough' },
+  { slug: 'total-ordered', name: 'Total ordered', category: 'Inventory', widget: 'report.ordersOverTime' },
+  { slug: 'total-received', name: 'Total received', category: 'Inventory', widget: 'report.inventoryUnavailable' },
+  { slug: 'total-shipped', name: 'Total shipped', category: 'Inventory', widget: 'core.salesOverTime' },
+  { slug: 'unique-skus', name: 'Unique SKUs', category: 'Inventory', widget: 'core.salesByProduct' },
+
+  // Marketing
+  { slug: 'performance-by-marketing-channel', name: 'Performance by marketing channel', category: 'Marketing', widget: 'phase2.performanceByChannel' },
+  { slug: 'marketing-performance-by-referring-channel', name: 'Performance by referring channel', category: 'Marketing', widget: 'phase2.performanceByChannel' },
+  { slug: 'performance-by-utm-campaign', name: 'Performance by UTM campaign', category: 'Marketing', widget: 'report.shopCampaignRoas' },
+  { slug: 'shop-channel-product-impressions', name: 'Shop channel product impressions', category: 'Marketing', widget: 'core.salesByProduct' },
+
+  // Orders
+  { slug: 'items-bought-together', name: 'Items bought together', category: 'Orders', widget: 'core.salesByProduct' },
+  { slug: 'items-ordered-over-time', name: 'Items ordered over time', category: 'Orders', widget: 'core.salesOverTime' },
+  { slug: 'items-returned-by-product', name: 'Items returned by product', category: 'Orders', widget: 'core.salesByProduct' },
+  { slug: 'items-returned-over-time', name: 'Items returned over time', category: 'Orders', widget: 'core.salesOverTime' },
+  { slug: 'items-reversed-by-product', name: 'Items reversed by product', category: 'Orders', widget: 'core.salesByProduct' },
+  { slug: 'order-to-fulfillment-time', name: 'Order to fulfillment time', category: 'Orders', widget: 'report.ordersTable' },
+  { slug: 'orders-and-returns-by-product', name: 'Orders and returns by product', category: 'Orders', widget: 'core.salesByProduct' },
+  { slug: 'orders-and-reversals-by-product', name: 'Orders and reversals by product', category: 'Orders', widget: 'report.ordersTable' },
+  { slug: 'orders-over-time', name: 'Orders over time', category: 'Orders', widget: 'report.ordersOverTime' },
+
+  // Finances (additional)
+  { slug: 'outstanding-store-credit-balance', name: 'Outstanding store credit balance', category: 'Finances', widget: 'report.giftCardBalance' },
+  { slug: 'payments-by-gateway-summary', name: 'Payments by gateway summary', category: 'Finances', widget: 'core.salesByChannel' },
+  { slug: 'payouts-over-time', name: 'Payouts over time', category: 'Finances', widget: 'core.salesOverTime' },
+  { slug: 'shipping-by-order', name: 'Shipping by order', category: 'Finances', widget: 'report.ordersTable' },
+  { slug: 'shop-channel-orders', name: 'Shop channel orders', category: 'Finances', widget: 'report.ordersTable' },
+  { slug: 'shop-payments-by-type', name: 'Shop payments by type', category: 'Finances', widget: 'core.salesByChannel' },
+  { slug: 'store-credit-transactions', name: 'Store credit transactions', category: 'Finances', widget: 'report.giftCardSales' },
+  { slug: 'taxes', name: 'Taxes', category: 'Finances', widget: 'report.managedMarketsTaxes' },
+  { slug: 'total-returns-by-order', name: 'Total returns by order', category: 'Finances', widget: 'report.ordersTable' },
+  { slug: 'total-sales-breakdown', name: 'Total sales breakdown', category: 'Finances', widget: 'core.salesBreakdown' },
+  { slug: 'total-sales-by-order', name: 'Total sales by order', category: 'Finances', widget: 'report.grossSalesByOrder' },
+  { slug: 'total-sales-reversals-by-order', name: 'Total sales reversals by order', category: 'Finances', widget: 'report.netSalesByOrder' },
+
+  // Profit Margin
+  { slug: 'gross-profit-by-product', name: 'Gross profit by product', category: 'Profit Margin', widget: 'report.grossProfitByProduct' },
+  { slug: 'gross-profit-by-product-variant', name: 'Gross profit by product variant', category: 'Profit Margin', widget: 'report.grossProfitByProduct' },
+
+  // Sales
+  { slug: 'active-subscriptions-over-time', name: 'Active subscriptions over time', category: 'Sales', widget: 'report.subscriptionsUnavailable' },
+  { slug: 'average-order-quantity-over-time', name: 'Average order quantity over time', category: 'Sales', widget: 'core.aovOverTime' },
+  { slug: 'sales-average-order-value-over-time', name: 'Average order value over time', category: 'Sales', widget: 'core.aovOverTime' },
+  { slug: 'average-profit-margin-by-market', name: 'Average profit margin by market', category: 'Sales', widget: 'core.salesBreakdown' },
+  { slug: 'bundle-item-versus-non-bundle-sales', name: 'Bundle item versus non-bundle sales', category: 'Sales', widget: 'core.salesBreakdown' },
+  { slug: 'bundle-total-sales-over-time', name: 'Bundle total sales over time', category: 'Sales', widget: 'core.salesOverTime' },
+  { slug: 'canceled-subscriptions-over-time', name: 'Canceled subscriptions over time', category: 'Sales', widget: 'report.subscriptionsUnavailable' },
+  { slug: 'gross-sales-by-sales-channel', name: 'Gross sales by sales channel', category: 'Sales', widget: 'core.salesByChannel' },
+  { slug: 'gross-sales-over-time', name: 'Gross sales over time', category: 'Sales', widget: 'core.salesOverTime' },
+  { slug: 'items-sold-by-referrer', name: 'Items sold by referrer', category: 'Sales', widget: 'phase2.salesByReferrer' },
+  { slug: 'net-sales-by-sales-channel', name: 'Net sales by sales channel', category: 'Sales', widget: 'core.salesByChannel' },
+  { slug: 'net-sales-over-time', name: 'Net sales over time', category: 'Sales', widget: 'core.salesOverTime' },
+  { slug: 'new-subscriptions-over-time', name: 'New subscriptions over time', category: 'Sales', widget: 'report.subscriptionsUnavailable' },
+  { slug: 'new-vs-returning-customer-sales', name: 'New vs returning customer sales', category: 'Sales', widget: 'report.newCustomerSalesOverTime' },
+  { slug: 'new-vs-returning-customers-over-time', name: 'New vs returning customers over time', category: 'Sales', widget: 'report.newCustomersOverTime' },
+  { slug: 'profit-margin-by-order', name: 'Profit margin by order', category: 'Sales', widget: 'report.grossProfitByOrder' },
+  { slug: 'returns-over-time', name: 'Returns over time', category: 'Sales', widget: 'core.salesOverTime' },
+  { slug: 'sales-by-customer-name', name: 'Sales by customer name', category: 'Sales', widget: 'report.rfmCustomerList' },
+  { slug: 'sales-by-discount-codes', name: 'Sales by discount codes', category: 'Sales', widget: 'report.discountsByOrder' },
+  { slug: 'sales-reversals-over-time', name: 'Sales reversals over time', category: 'Sales', widget: 'core.salesOverTime' },
+  { slug: 'subscription-vs-one-time-sales', name: 'Subscription vs one-time sales', category: 'Sales', widget: 'report.newVsReturningCustomers' },
+  { slug: 'top-product-variants-by-units-sold', name: 'Top product variants by units sold', category: 'Sales', widget: 'core.salesByProduct' },
+  { slug: 'total-returns-over-time', name: 'Total returns over time', category: 'Sales', widget: 'core.salesOverTime' },
+  { slug: 'total-sales-by-billing-location', name: 'Total sales by billing location', category: 'Sales', widget: 'core.salesByLocation' },
+  { slug: 'total-sales-by-bundle', name: 'Total sales by bundle', category: 'Sales', widget: 'core.salesBreakdown' },
+  { slug: 'total-sales-by-bundle-component', name: 'Total sales by bundle component', category: 'Sales', widget: 'core.salesBreakdown' },
+  { slug: 'total-sales-by-currency', name: 'Total sales by currency', category: 'Sales', widget: 'report.salesByCurrency' },
+  { slug: 'sales-total-sales-by-product', name: 'Total sales by product', category: 'Sales', widget: 'core.salesByProduct' },
+  { slug: 'total-sales-by-product-variant', name: 'Total sales by product variant', category: 'Sales', widget: 'core.salesByProduct' },
+  { slug: 'sales-total-sales-by-referrer', name: 'Total sales by referrer', category: 'Sales', widget: 'phase2.salesByReferrer' },
+  { slug: 'total-sales-by-sales-channel', name: 'Total sales by sales channel', category: 'Sales', widget: 'core.salesByChannel' },
+  { slug: 'sales-total-sales-by-social-referrer', name: 'Total sales by social referrer', category: 'Sales', widget: 'phase2.salesBySocialReferrer' },
+  { slug: 'total-sales-by-vendor', name: 'Total sales by vendor', category: 'Sales', widget: 'core.salesByProduct' },
+  { slug: 'sales-total-sales-over-time', name: 'Total sales over time', category: 'Sales', widget: 'core.salesOverTime' },
+  { slug: 'total-sales-reversals-over-time', name: 'Total sales reversals over time', category: 'Sales', widget: 'core.salesOverTime' },
+  { slug: 'weekly-sales-patterns', name: 'Weekly sales patterns', category: 'Sales', widget: 'core.salesOverTime' },
+];
+
+export const REPORTS_BY_SLUG = Object.fromEntries(ADMIN_REPORTS.map((r) => [r.slug, r]));
+
+const LAST_VIEWED_KEY = 'tbl_report_last_viewed';
+
+export function getReportLastViewed(slug) {
+  try {
+    const data = JSON.parse(localStorage.getItem(LAST_VIEWED_KEY) || '{}');
+    return data[slug] || null;
+  } catch {
+    return null;
+  }
+}
+
+export function recordReportView(slug) {
+  try {
+    const data = JSON.parse(localStorage.getItem(LAST_VIEWED_KEY) || '{}');
+    data[slug] = new Date().toISOString();
+    localStorage.setItem(LAST_VIEWED_KEY, JSON.stringify(data));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function getAllReportLastViewed() {
+  try {
+    return JSON.parse(localStorage.getItem(LAST_VIEWED_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}

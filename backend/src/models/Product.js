@@ -1,0 +1,42 @@
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+
+const Product = sequelize.define('Product', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  category_id: { type: DataTypes.INTEGER, allowNull: false },
+  subcategory_id: { type: DataTypes.INTEGER },
+  sku: { type: DataTypes.STRING(100), unique: true },
+  name_ar: { type: DataTypes.STRING(200), allowNull: false },
+  name_en: { type: DataTypes.STRING(200), allowNull: false },
+  slug: { type: DataTypes.STRING(250), unique: true },
+  description_ar: { type: DataTypes.TEXT },
+  description_en: { type: DataTypes.TEXT },
+  price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+  sale_price: { type: DataTypes.DECIMAL(10, 2) },
+  cost_price: { type: DataTypes.DECIMAL(10, 2) },
+  stock: { type: DataTypes.INTEGER, defaultValue: 0 },
+  low_stock_threshold: { type: DataTypes.INTEGER, defaultValue: 5 },
+  weight: { type: DataTypes.DECIMAL(8, 2) },
+  thumbnail: { type: DataTypes.STRING(500) },
+  is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
+  is_featured: { type: DataTypes.BOOLEAN, defaultValue: false },
+  is_new_arrival: { type: DataTypes.BOOLEAN, defaultValue: false },
+  is_best_seller: { type: DataTypes.BOOLEAN, defaultValue: false },
+  is_on_sale: { type: DataTypes.BOOLEAN, defaultValue: false },
+  is_hero_ticker: { type: DataTypes.BOOLEAN, defaultValue: false },
+  hero_ticker_order: { type: DataTypes.INTEGER, allowNull: true },
+  hero_ticker_image_id: { type: DataTypes.INTEGER, allowNull: true },
+  sizes: { type: DataTypes.JSON, defaultValue: [] },
+  colors: { type: DataTypes.JSON, defaultValue: [] },
+  tags: { type: DataTypes.JSON, defaultValue: [] },
+  rating_avg: { type: DataTypes.DECIMAL(3, 2), defaultValue: 0 },
+  rating_count: { type: DataTypes.INTEGER, defaultValue: 0 },
+  views: { type: DataTypes.INTEGER, defaultValue: 0 },
+  sales_count: { type: DataTypes.INTEGER, defaultValue: 0 },
+  meta_title_ar: { type: DataTypes.STRING(200) },
+  meta_title_en: { type: DataTypes.STRING(200) },
+  meta_description_ar: { type: DataTypes.TEXT },
+  meta_description_en: { type: DataTypes.TEXT },
+}, { tableName: 'products' });
+
+module.exports = Product;
