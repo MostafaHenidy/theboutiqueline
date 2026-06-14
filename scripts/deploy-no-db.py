@@ -12,7 +12,8 @@ USER = 'root'
 REMOTE_BASE = '/home/adminanmkavps/web/theboutiqueline.anmka.com'
 REMOTE_PUBLIC = f'{REMOTE_BASE}/public_html'
 REMOTE_BACKEND = f'{REMOTE_BASE}/backend'
-SKIP = {'node_modules', '.git', '__pycache__'}
+SKIP = {'node_modules', '.git', '__pycache__', 'uploads', 'tmp'}
+SKIP_FILES = {'.env', 'miskwear.sqlite'}
 
 
 def make_tar(source_dir, arc_path, exclude_dirs=None):
@@ -21,7 +22,7 @@ def make_tar(source_dir, arc_path, exclude_dirs=None):
         for root, dirs, files in os.walk(source_dir):
             dirs[:] = [d for d in dirs if d not in exclude_dirs]
             for f in files:
-                if f == '.env':
+                if f in SKIP_FILES or f.endswith('.sqlite'):
                     continue
                 full = os.path.join(root, f)
                 arcname = os.path.relpath(full, source_dir).replace('\\', '/')
@@ -34,7 +35,7 @@ def run_ssh(client, cmd, timeout=300):
     out = stdout.read().decode('utf-8', errors='replace')
     err = stderr.read().decode('utf-8', errors='replace')
     if out:
-        print(out.rstrip())
+        print(out.rstrip().encode('ascii', errors='replace').decode('ascii'))
     if err.strip():
         print('stderr:', err.encode('ascii', errors='replace').decode('ascii'))
     return stdout.channel.recv_exit_status()

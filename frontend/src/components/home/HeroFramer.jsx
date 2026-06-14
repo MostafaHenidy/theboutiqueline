@@ -235,12 +235,9 @@ function HeroCopy({ variant = 'mobile', className = '' }) {
 
   const headlineStyle = {
     fontFamily: 'var(--font-display, var(--font-arabic))',
-    fontSize: isEn
-      ? (isDesktop ? 'clamp(3.5rem, 8vw, 8rem)' : 'clamp(2.25rem, 10vw, 3.75rem)')
-      : (isDesktop ? 'clamp(4.1rem, 8.8vw, 8.75rem)' : 'clamp(2.75rem, 11vw, 4.25rem)'),
-    lineHeight: isEn ? 0.88 : 1.12,
+    lineHeight: isEn ? 0.92 : 1.12,
     color: 'rgb(255, 255, 227)',
-    letterSpacing: isEn ? (isDesktop ? '0.06em' : '0.03em') : '0.02em',
+    letterSpacing: isEn ? (isDesktop ? '0.035em' : '0.03em') : '0.02em',
     maxWidth: '100%',
   };
 

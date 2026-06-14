@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function NavLinkItem({ link, label, onNavigate, className = '', showDisabled = true, soonLabel = '(soon)' }) {
   const disabled = link.is_active === false || link.is_active === 0 || link.is_active === '0';
-  const baseClass = `site-header-nav-link whitespace-nowrap uppercase transition-colors ${className}`;
+  const baseClass = `site-header-nav-link uppercase transition-colors ${className}`;
 
   if (disabled) {
     if (!showDisabled) return null;

@@ -394,31 +394,56 @@ export default function Home() {
     { slug: 'perfumes', label: t('cat_perfumes'), href: '/category/perfumes', staticImg: P.catPerfumes },
   ]), [t, language]);
 
+  /** Home grid order (2 cols): MEN | SHOES → PERFUMES | ACCESSORIES → CHILDREN | WOMEN */
+  const CATEGORY_GRID_SLUG_ORDER = [
+    'mens-clothing',
+    'shoes',
+    'perfumes',
+    'accessories',
+    'childrens-clothing',
+    'womens-clothing',
+  ];
+
   const categoryCards = useMemo(() => {
     const imgFor = (cat) => {
       if (cat?.image) return resolveMediaUrl(cat.image);
       return categoryFallbackImg[cat?.slug] || P.catMen;
     };
     const isActive = isCategoryActive;
+    const sortForGrid = (cards) => {
+      const rank = (slug) => {
+        const i = CATEGORY_GRID_SLUG_ORDER.indexOf(slug);
+        return i === -1 ? CATEGORY_GRID_SLUG_ORDER.length : i;
+      };
+      return [...cards].sort((a, b) => {
+        const diff = rank(a.slug) - rank(b.slug);
+        return diff !== 0 ? diff : (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+      });
+    };
     if (categories.length > 0) {
-      return [...categories]
+      const cards = [...categories]
         .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
         .map((cat) => ({
           key: `api-${cat.id}`,
+          slug: cat.slug,
+          sortOrder: cat.sort_order ?? 0,
           label: getCategoryTileTitle(cat, language),
           dateLabel: !isActive(cat) ? getCategoryComingSoonLabel(cat, language) : null,
           href: `/category/${cat.slug}`,
           imageSrc: imgFor(cat),
           disabled: !isActive(cat),
         }));
+      return sortForGrid(cards);
     }
-    return categoryTiles.map((tile) => ({
+    return sortForGrid(categoryTiles.map((tile) => ({
       key: tile.slug,
+      slug: tile.slug,
+      sortOrder: 0,
       label: tile.label,
       href: tile.href,
       imageSrc: tile.staticImg,
       disabled: false,
-    }));
+    })));
   }, [categories, categoryTiles, categoryFallbackImg, language]);
 
   const womenCategory = useMemo(

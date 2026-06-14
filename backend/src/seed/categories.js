@@ -5,15 +5,15 @@
 const CATEGORY_SEED = [
   {
     slug: 'mens-clothing',
-    name_en: "Men's Clothing",
-    name_ar: 'ملابس رجالية',
+    name_en: 'Men',
+    name_ar: 'رجالي',
     image: '/photos/vfprU5p4ewa5iy7pKy0FpdX3A.jpg',
     sort_order: 1,
   },
   {
     slug: 'womens-clothing',
-    name_en: "Women's Clothing",
-    name_ar: 'ملابس نسائية',
+    name_en: 'Women',
+    name_ar: 'نسائي',
     coming_soon_label_en: '(2027)',
     coming_soon_label_ar: '(2027)',
     image: '/photos/klOLqeBgESjqUBiaPQqHCqBgSw.webp',
@@ -22,8 +22,8 @@ const CATEGORY_SEED = [
   },
   {
     slug: 'childrens-clothing',
-    name_en: "Children's Clothing",
-    name_ar: 'ملابس أطفال',
+    name_en: 'Children',
+    name_ar: 'أطفال',
     coming_soon_label_en: '(2027)',
     coming_soon_label_ar: '(2027)',
     image: '/photos/LIiUpXMeQEBfuNgYYaeO1PyL5BA.jpg',

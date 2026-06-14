@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -39,6 +40,7 @@ export default function Header() {
   };
 
   const themeAriaLabel = theme === 'dark' ? t('theme_switch_light') : t('theme_switch_dark');
+  const asideSlideX = language === 'ar' ? '100%' : '-100%';
 
   const [scrolled,      setScrolled]      = useState(false);
   const [mobileOpen,    setMobileOpen]    = useState(false);
@@ -51,6 +53,11 @@ export default function Header() {
   const searchToggleRef = useRef(null);
   const userMenuRef = useRef(null);
   const scrollUnlockRef = useRef(null);
+  const [portalReady, setPortalReady] = useState(false);
+
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
 
   /* scroll detection */
   useEffect(() => {
@@ -135,8 +142,8 @@ export default function Header() {
   return (
     <header
       className={`site-header site-header--motion ${
-        scrolled ? 'is-scrolled backdrop-blur-md bg-surface-card/98' : 'bg-surface-card'
-      }`}
+        mobileOpen ? 'site-header--menu-open' : ''
+      } ${scrolled ? 'is-scrolled backdrop-blur-md bg-surface-card/98' : 'bg-surface-card'}`}
     >
       {/* ══ HEADER ROW (all breakpoints) ══ */}
       <div className="site-header-main-bar container-custom">
@@ -359,90 +366,91 @@ export default function Header() {
         )}
       </AnimatePresence>
 
-      {/* ── Mobile menu backdrop + panel ── */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.button
-            type="button"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={closeMenus}
-            className="site-header-nav-backdrop fixed inset-0 border-0 p-0 cursor-default touch-none overscroll-none"
-            aria-label="Close menu"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* ── Mobile menu ── */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2 }}
-            className="site-header-mobile-menu relative z-[101] border-t border-line bg-theme"
-          >
-            <div className="container-custom site-header-mobile-menu__inner">
-              {navLinks.length > 0 && (
-                <div className="site-header-mobile-nav">
-                  <HeaderNavMenu
-                    navLinks={navLinks}
-                    language={language}
-                    onNavigate={handleNavNavigate}
-                    variant="mobile"
-                  />
+      {portalReady && createPortal(
+        <AnimatePresence>
+          {mobileOpen && (
+            <div className="site-header-aside-overlay" role="presentation">
+              <motion.button
+                type="button"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={closeMenus}
+                className="site-header-aside-backdrop"
+                aria-label="Close menu"
+              />
+              <motion.div
+                initial={{ opacity: 0, x: asideSlideX }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: asideSlideX }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="site-header-aside-panel"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="site-header-aside-panel__scroll">
+                  {navLinks.length > 0 && (
+                    <nav className="site-header-aside-nav" aria-label="Browse navigation">
+                      <HeaderNavMenu
+                        navLinks={navLinks}
+                        language={language}
+                        onNavigate={handleNavNavigate}
+                        variant="mobile"
+                      />
+                    </nav>
+                  )}
                 </div>
-              )}
 
-              {!isAuthenticated ? (
-                <div className="site-header-mobile-auth lg:hidden">
-                  <Link
-                    to="/login"
-                    onClick={handleMobileLinkNavigate}
-                    className="site-header-mobile-auth__btn site-header-mobile-auth__btn--outline"
-                  >
-                    {t('login')}
-                  </Link>
-                  <Link
-                    to="/register"
-                    onClick={handleMobileLinkNavigate}
-                    className="site-header-mobile-auth__btn site-header-mobile-auth__btn--primary"
-                  >
-                    {t('register')}
-                  </Link>
-                </div>
-              ) : (
-                <div className="site-header-mobile-account lg:hidden">
-                  <p className="site-header-mobile-account__name">{user?.name}</p>
-                  <p className="site-header-mobile-account__email">{user?.email}</p>
-                  <div className="site-header-mobile-account__links">
-                    {(user?.role === 'admin' || user?.role === 'orders_admin') && (
-                      <Link to={user?.role === 'orders_admin' ? '/admin/orders' : '/admin'} onClick={handleMobileLinkNavigate} className="site-header-mobile-account__link">
-                        <Package size={16} /> {t('header_admin')}
+                <div className="site-header-aside-panel__footer">
+                  {!isAuthenticated ? (
+                    <div className="site-header-mobile-auth">
+                      <Link
+                        to="/login"
+                        onClick={handleMobileLinkNavigate}
+                        className="site-header-mobile-auth__btn site-header-mobile-auth__btn--outline"
+                      >
+                        {t('login')}
                       </Link>
-                    )}
-                    <Link to="/dashboard" onClick={handleMobileLinkNavigate} className="site-header-mobile-account__link">
-                      <User size={16} /> {t('header_profile')}
-                    </Link>
-                    <Link to="/orders" onClick={handleMobileLinkNavigate} className="site-header-mobile-account__link">
-                      <Package size={16} /> {t('header_orders')}
-                    </Link>
-                    <Link to="/wishlist" onClick={handleMobileLinkNavigate} className="site-header-mobile-account__link">
-                      <Heart size={16} /> {t('wishlist')}
-                    </Link>
-                    <button type="button" onClick={() => { handleLogout(); setMobileOpen(false); }} className="site-header-mobile-account__link site-header-mobile-account__link--logout">
-                      <LogOut size={16} /> {t('logout')}
-                    </button>
-                  </div>
+                      <Link
+                        to="/register"
+                        onClick={handleMobileLinkNavigate}
+                        className="site-header-mobile-auth__btn site-header-mobile-auth__btn--primary"
+                      >
+                        {t('register')}
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="site-header-mobile-account">
+                      <p className="site-header-mobile-account__name">{user?.name}</p>
+                      <p className="site-header-mobile-account__email">{user?.email}</p>
+                      <div className="site-header-mobile-account__links">
+                        {(user?.role === 'admin' || user?.role === 'orders_admin') && (
+                          <Link to={user?.role === 'orders_admin' ? '/admin/orders' : '/admin'} onClick={handleMobileLinkNavigate} className="site-header-mobile-account__link">
+                            <Package size={16} /> {t('header_admin')}
+                          </Link>
+                        )}
+                        <Link to="/dashboard" onClick={handleMobileLinkNavigate} className="site-header-mobile-account__link">
+                          <User size={16} /> {t('header_profile')}
+                        </Link>
+                        <Link to="/orders" onClick={handleMobileLinkNavigate} className="site-header-mobile-account__link">
+                          <Package size={16} /> {t('header_orders')}
+                        </Link>
+                        <Link to="/wishlist" onClick={handleMobileLinkNavigate} className="site-header-mobile-account__link">
+                          <Heart size={16} /> {t('wishlist')}
+                        </Link>
+                        <button type="button" onClick={() => { handleLogout(); setMobileOpen(false); }} className="site-header-mobile-account__link site-header-mobile-account__link--logout">
+                          <LogOut size={16} /> {t('logout')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </motion.div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </header>
   );
 }

@@ -54,27 +54,27 @@ export default function HeaderNavMenu({ navLinks, language, onNavigate, variant 
     return (
       <div className="space-y-1">
         {activeLinks.map((link) => (
-          <div key={link.id} className="px-2 py-3 border-b border-line">
-            <NavLinkItem link={link} label={label(link)} onNavigate={onNavigate} className="block" />
+          <div key={link.id} className="site-header-aside-nav__item">
+            <NavLinkItem link={link} label={label(link)} onNavigate={onNavigate} className="block whitespace-normal break-words" />
           </div>
         ))}
 
         {disabledLinks.map((link) => (
-          <div key={link.id} className="px-2 py-3 border-b border-line">
+          <div key={link.id} className="site-header-aside-nav__item">
             <NavLinkItem
               link={link}
               label={label(link)}
               soonLabel={soonLabel}
               onNavigate={onNavigate}
-              className="block"
+              className="block whitespace-normal break-words"
               showDisabled
             />
           </div>
         ))}
 
         {moreLink && isLinkActive(moreLink) && !showMoreDropdown && (
-          <div className="px-2 py-3 border-b border-line">
-            <NavLinkItem link={moreLink} label={moreLabel} onNavigate={onNavigate} className="block" />
+          <div className="site-header-aside-nav__item">
+            <NavLinkItem link={moreLink} label={moreLabel} onNavigate={onNavigate} className="block whitespace-normal break-words" />
           </div>
         )}
       </div>
@@ -93,7 +93,7 @@ export default function HeaderNavMenu({ navLinks, language, onNavigate, variant 
             link={link}
             label={label(link)}
             onNavigate={onNavigate}
-            className="flex-shrink-0 text-[0.7rem] xl:text-[0.75rem]"
+            className="flex-shrink-0 whitespace-nowrap text-[0.7rem] xl:text-[0.75rem]"
           />
         ))}
       </div>
@@ -160,7 +160,7 @@ export default function HeaderNavMenu({ navLinks, language, onNavigate, variant 
           link={moreLink}
           label={moreLabel}
           onNavigate={onNavigate}
-          className="flex-shrink-0 text-[0.7rem] xl:text-[0.75rem]"
+          className="flex-shrink-0 whitespace-nowrap text-[0.7rem] xl:text-[0.75rem]"
         />
       )}
     </nav>
