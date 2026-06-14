@@ -9,7 +9,7 @@ import { toggleWishlist, selectIsInWishlist } from '../store/slices/wishlistSlic
 import ProductCard from '../components/product/ProductCard';
 import ProductDescriptionContent from '../components/product/ProductDescriptionContent';
 import api from '../utils/api';
-import { getProductName, formatPrice, getDiscountPercent, resolveMediaUrl, parseJsonStringArray } from '../utils/helpers';
+import { getProductName, formatPrice, getDiscountPercent, resolveMediaUrl, parseJsonStringArray, getProductGalleryImages } from '../utils/helpers';
 import { getVariantStock, findMatchingVariant } from '../utils/productVariants';
 import toast from 'react-hot-toast';
 
@@ -313,7 +313,7 @@ export default function ProductDetail() {
     if (raw.length === 1 && String(raw[0]).toLowerCase() === 'default') return [];
     return raw;
   })();
-  const images      = product.images?.length > 0 ? product.images : [{ url: product.thumbnail }];
+  const images = getProductGalleryImages(product);
   const discount    = getDiscountPercent(product.price, product.sale_price);
   const availableStock = getVariantStock(product, selectedSize, selectedColor);
   const isOutOfStock = availableStock === 0;

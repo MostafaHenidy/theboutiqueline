@@ -54,6 +54,8 @@ export default function Header() {
   const userMenuRef = useRef(null);
   const scrollUnlockRef = useRef(null);
   const [portalReady, setPortalReady] = useState(false);
+  /** Keep scroll locked until aside exit animation finishes (fixes iOS jump on backdrop tap). */
+  const [asideScrollLocked, setAsideScrollLocked] = useState(false);
 
   useEffect(() => {
     setPortalReady(true);
@@ -79,12 +81,21 @@ export default function Header() {
     if (searchOpen && searchRef.current) searchRef.current.focus();
   }, [searchOpen]);
 
-  /* Lock scroll while mobile menu is open. */
-  useBodyScrollLock(mobileOpen, scrollUnlockRef);
+  useEffect(() => {
+    if (mobileOpen) setAsideScrollLocked(true);
+  }, [mobileOpen]);
+
+  /* Lock scroll while aside is open or still exiting. */
+  useBodyScrollLock(asideScrollLocked, scrollUnlockRef);
+
+  const handleAsideExitComplete = useCallback(() => {
+    if (!mobileOpen) setAsideScrollLocked(false);
+  }, [mobileOpen]);
 
   /* Safety: force-clear all locks on route change. */
   useEffect(() => {
     setMobileOpen(false);
+    setAsideScrollLocked(false);
     forceUnlockScroll();
   }, [location.pathname]);
 
@@ -107,6 +118,12 @@ export default function Header() {
   };
 
   const closeMenus = () => setMobileOpen(false);
+
+  const handleBackdropClose = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeMenus();
+  };
 
   /** Close mobile menu before in-app navigation (scroll to top on destination). */
   const handleMobileLinkNavigate = () => {
@@ -367,26 +384,27 @@ export default function Header() {
       </AnimatePresence>
 
       {portalReady && createPortal(
-        <AnimatePresence>
+        <AnimatePresence onExitComplete={handleAsideExitComplete}>
           {mobileOpen && (
             <div className="site-header-aside-overlay" role="presentation">
-              <motion.button
-                type="button"
+              <motion.div
+                role="button"
+                tabIndex={-1}
+                aria-label="Close menu"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                onClick={closeMenus}
+                onPointerDown={handleBackdropClose}
                 className="site-header-aside-backdrop"
-                aria-label="Close menu"
               />
               <motion.div
-                initial={{ opacity: 0, x: asideSlideX }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: asideSlideX }}
+                initial={{ x: asideSlideX }}
+                animate={{ x: 0 }}
+                exit={{ x: asideSlideX }}
                 transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                 className="site-header-aside-panel"
-                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
               >
                 <div className="site-header-aside-panel__scroll">
                   {navLinks.length > 0 && (

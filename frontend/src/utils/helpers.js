@@ -128,11 +128,42 @@ export const resolveMediaUrl = (url) => {
   return s;
 };
 
-export const getProductImage = (product) =>
-  resolveMediaUrl(product?.thumbnail || product?.images?.[0]?.url)
-  || 'https://via.placeholder.com/400x400?text=Smart+Wood';
+export const getProductImage = (product) => {
+  const thumb = product?.thumbnail?.trim();
+  const imgs = Array.isArray(product?.images) ? product.images : [];
+  const primary = imgs.find((img) => img?.is_primary === true || img?.is_primary === 1)
+    || (thumb ? imgs.find((img) => img.url?.trim() === thumb) : null);
 
-/** Ordered gallery URLs for product cards — one switch per image. */
+  const url = primary?.url || thumb || imgs[0]?.url;
+  return resolveMediaUrl(url)
+    || 'https://via.placeholder.com/400x400?text=Smart+Wood';
+};
+
+/** Ordered gallery image records — primary / thumbnail first. */
+export function getProductGalleryImages(product) {
+  if (!product) return [];
+
+  const thumb = (product.thumbnail || '').trim();
+  const imgs = Array.isArray(product.images) ? [...product.images] : [];
+  if (!imgs.length) {
+    return thumb ? [{ url: thumb, id: 'thumb' }] : [];
+  }
+
+  const score = (img) => {
+    let s = 0;
+    if (img?.is_primary === true || img?.is_primary === 1) s += 1000;
+    if (thumb && img?.url?.trim() === thumb) s += 500;
+    return s;
+  };
+
+  return imgs.sort((a, b) => {
+    const diff = score(b) - score(a);
+    if (diff !== 0) return diff;
+    return (a?.sort_order ?? 0) - (b?.sort_order ?? 0) || (a?.id ?? 0) - (b?.id ?? 0);
+  });
+}
+
+/** Ordered gallery URLs for product cards — primary image first, then sort order. */
 export function getProductCardImages(product) {
   if (!product) return [];
 
@@ -145,21 +176,13 @@ export function getProductCardImages(product) {
     out.push({ key, url });
   };
 
-  const imgs = Array.isArray(product.images) ? product.images : [];
-  [...imgs]
-    .sort((a, b) => (a?.sort_order ?? 0) - (b?.sort_order ?? 0) || (a?.id ?? 0) - (b?.id ?? 0))
-    .forEach((img) => push(img?.url, `img-${img?.id ?? out.length}`));
-
-  if (product.thumbnail) {
-    const thumb = resolveMediaUrl(product.thumbnail);
-    if (thumb && !seen.has(thumb)) {
-      out.unshift({ key: 'thumb', url: thumb });
-    }
-  }
+  getProductGalleryImages(product).forEach((img, i) => push(img?.url, `img-${img?.id ?? i}`));
 
   if (!out.length) {
     const fallback = getProductImage(product);
-    if (fallback) out.push({ key: 'fallback', url: fallback });
+    if (fallback && !fallback.includes('placeholder')) {
+      out.push({ key: 'fallback', url: fallback });
+    }
   }
 
   return out;

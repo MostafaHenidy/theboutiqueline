@@ -287,7 +287,11 @@ export default function AdminProducts() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <img src={getProductImage(p) || 'https://via.placeholder.com/50'} alt="" className="w-12 h-12 rounded-xl object-cover" />
+                        <img
+                          src={`${getProductImage(p) || 'https://via.placeholder.com/50'}?v=${p.updatedAt || p.updated_at || p.id}`}
+                          alt=""
+                          className="w-12 h-12 rounded-xl object-cover"
+                        />
                         <div>
                           <p className="font-semibold text-gray-800 text-sm">{isAr ? p.name_ar : p.name_en}</p>
                           <p className="text-xs text-gray-400">{p.category?.name_en}</p>

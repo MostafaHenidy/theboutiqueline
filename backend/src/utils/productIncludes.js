@@ -6,7 +6,7 @@ const storefrontProductImagesInclude = {
   model: ProductImage,
   as: 'images',
   separate: true,
-  order: [['sort_order', 'ASC'], ['id', 'ASC']],
+  order: [['is_primary', 'DESC'], ['sort_order', 'ASC'], ['id', 'ASC']],
 };
 
 /** Product nested under cart lines, wishlist rows, etc. */
@@ -24,7 +24,26 @@ function nestedStorefrontProductInclude(imageLimit) {
   };
 }
 
+/** Cover image for admin tables (primary first). */
+const adminListProductImagesInclude = {
+  model: ProductImage,
+  as: 'images',
+  separate: true,
+  order: [['is_primary', 'DESC'], ['sort_order', 'ASC'], ['id', 'ASC']],
+  limit: 1,
+};
+
+/** All gallery images for admin edit / storefront. */
+const adminDetailProductImagesInclude = {
+  model: ProductImage,
+  as: 'images',
+  separate: true,
+  order: [['is_primary', 'DESC'], ['sort_order', 'ASC'], ['id', 'ASC']],
+};
+
 module.exports = {
   storefrontProductImagesInclude,
   nestedStorefrontProductInclude,
+  adminListProductImagesInclude,
+  adminDetailProductImagesInclude,
 };

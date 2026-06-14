@@ -12,10 +12,25 @@ import {
   variantRowsToPayload,
 } from '../../utils/productVariants';
 
-function ProductImageThumb({ src, alt, onRemove, removeLabel }) {
+function ProductImageThumb({ src, alt, onRemove, removeLabel, isPrimary, onSetPrimary, setPrimaryLabel, primaryLabel }) {
   return (
     <div className="relative w-20 h-20 flex-shrink-0">
-      <img src={src} alt={alt} className="w-full h-full object-cover rounded-xl border border-gray-100" />
+      <button
+        type="button"
+        onClick={onSetPrimary}
+        className={`w-full h-full rounded-xl border-2 overflow-hidden transition-colors ${
+          isPrimary ? 'border-primary ring-2 ring-primary/30' : 'border-gray-100 hover:border-primary/50'
+        }`}
+        aria-label={setPrimaryLabel}
+        aria-pressed={isPrimary}
+      >
+        <img src={src} alt={alt} className="w-full h-full object-cover" />
+      </button>
+      {isPrimary && (
+        <span className="absolute top-1 left-1 z-10 px-1.5 py-0.5 rounded-md bg-primary text-white text-[10px] font-bold uppercase tracking-wide shadow">
+          {primaryLabel}
+        </span>
+      )}
       <button
         type="button"
         onClick={onRemove}
@@ -26,6 +41,19 @@ function ProductImageThumb({ src, alt, onRemove, removeLabel }) {
       </button>
     </div>
   );
+}
+
+function isPrimaryImage(img) {
+  return img?.is_primary === true || img?.is_primary === 1;
+}
+
+function pickPrimaryFromProduct(product) {
+  const imgs = Array.isArray(product?.images) ? product.images : [];
+  const thumb = (product?.thumbnail || '').trim();
+  return imgs.find(isPrimaryImage)
+    || (thumb ? imgs.find((img) => img.url?.trim() === thumb) : null)
+    || imgs[0]
+    || null;
 }
 
 function numStr(v) {
@@ -155,6 +183,8 @@ export default function AdminProductForm() {
   const [categories, setCategories] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
+  /** { kind: 'existing', id } | { kind: 'new', index } */
+  const [primaryRef, setPrimaryRef] = useState(null);
   const imageInputRef = useRef(null);
   const [form, setForm] = useState(INITIAL_FORM);
   const [variantStocks, setVariantStocks] = useState({});
@@ -189,7 +219,17 @@ export default function AdminProductForm() {
       const dto = productDtoToForm(data.data);
       if (dto) setForm((prev) => ({ ...prev, ...dto }));
       else toast.error(isAr ? 'بيانات المنتج غير صالحة' : 'Invalid product data');
-      setExistingImages(data.data?.images || []);
+      const imgs = data.data?.images || [];
+      const primaryImg = pickPrimaryFromProduct(data.data);
+      if (primaryImg?.id) {
+        setExistingImages(imgs.map((img) => ({
+          ...img,
+          is_primary: img.id === primaryImg.id,
+        })));
+        setPrimaryRef({ kind: 'existing', id: primaryImg.id });
+      } else {
+        setPrimaryRef(null);
+      }
       setVariantStocks(variantsFromProduct(data.data));
     } catch {
       toast.error(isAr ? 'تعذر تحميل المنتج' : 'Could not load product');
@@ -238,7 +278,21 @@ export default function AdminProductForm() {
       if (imageFiles.length > 0) {
         const formData = new FormData();
         imageFiles.forEach((f) => formData.append('images', f));
-        await api.post(`/products/${savedProduct.id}/images`, formData);
+        if (primaryRef?.kind === 'new') {
+          formData.append('primary_from_upload', '1');
+          formData.append('primary_index', String(primaryRef.index));
+        }
+        const { data: uploadRes } = await api.post(`/products/${savedProduct.id}/images`, formData);
+        const uploaded = uploadRes?.data || [];
+        if (primaryRef?.kind === 'new' && uploaded.length > 0) {
+          const pick = uploaded[Math.min(primaryRef.index, uploaded.length - 1)];
+          if (pick?.id) {
+            await api.patch(`/products/${savedProduct.id}/images/${pick.id}/primary`);
+          }
+        }
+      }
+      if (primaryRef?.kind === 'existing') {
+        await api.patch(`/products/${savedProduct.id}/images/${primaryRef.id}/primary`);
       }
       toast.success(isEdit ? (isAr ? 'تم التحديث' : 'Updated') : isAr ? 'تم الإنشاء' : 'Created');
       navigate('/admin/products');
@@ -266,7 +320,13 @@ export default function AdminProductForm() {
   const addImageFiles = (fileList) => {
     const incoming = Array.from(fileList || []).filter((f) => f.type.startsWith('image/'));
     if (!incoming.length) return;
-    setImageFiles((prev) => [...prev, ...incoming]);
+    setImageFiles((prev) => {
+      const next = [...prev, ...incoming];
+      if (!primaryRef && next.length > 0 && existingImages.length === 0) {
+        setPrimaryRef({ kind: 'new', index: 0 });
+      }
+      return next;
+    });
   };
 
   const handleImageInputChange = (e) => {
@@ -282,13 +342,66 @@ export default function AdminProductForm() {
 
   const removeNewImage = (index) => {
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setPrimaryRef((prev) => {
+      if (!prev) return prev;
+      if (prev.kind === 'new' && prev.index === index) {
+        if (existingImages.length > 0) {
+          const fallback = existingImages.find((img) => img.is_primary) || existingImages[0];
+          return { kind: 'existing', id: fallback.id };
+        }
+        return null;
+      }
+      if (prev.kind === 'new' && prev.index > index) {
+        return { kind: 'new', index: prev.index - 1 };
+      }
+      return prev;
+    });
+  };
+
+  const setExistingAsPrimary = async (img) => {
+    setPrimaryRef({ kind: 'existing', id: img.id });
+    setExistingImages((prev) => prev.map((i) => ({ ...i, is_primary: i.id === img.id })));
+    if (!isEdit) return;
+    try {
+      const { data } = await api.patch(`/products/${id}/images/${img.id}/primary`);
+      const updated = data?.data;
+      if (updated?.id) {
+        setExistingImages((prev) => prev.map((i) => ({
+          ...i,
+          is_primary: i.id === updated.id,
+        })));
+      }
+      toast.success(isAr ? 'تم تعيين الصورة الرئيسية' : 'Main image updated');
+    } catch (err) {
+      toast.error(err.response?.data?.message || (isAr ? 'تعذر تعيين الصورة الرئيسية' : 'Could not set main image'));
+    }
+  };
+
+  const setNewAsPrimary = (index) => {
+    setPrimaryRef({ kind: 'new', index });
+    setExistingImages((prev) => prev.map((i) => ({ ...i, is_primary: false })));
+    toast.success(isAr ? 'سيتم تعيينها كصورة رئيسية عند الحفظ' : 'Main image will apply when you save');
   };
 
   const removeExistingImage = async (img) => {
     if (!isEdit) return;
     try {
       await api.delete(`/products/${id}/images/${img.id}`);
-      setExistingImages((prev) => prev.filter((i) => i.id !== img.id));
+      setExistingImages((prev) => {
+        const remaining = prev.filter((i) => i.id !== img.id);
+        setPrimaryRef((primary) => {
+          if (primary?.kind === 'existing' && primary.id === img.id) {
+            if (remaining.length > 0) {
+              const fallback = remaining.find((i) => i.is_primary) || remaining[0];
+              return { kind: 'existing', id: fallback.id };
+            }
+            if (imageFiles.length > 0) return { kind: 'new', index: 0 };
+            return null;
+          }
+          return primary;
+        });
+        return remaining;
+      });
       setForm((prev) => (
         String(prev.hero_ticker_image_id) === String(img.id)
           ? { ...prev, hero_ticker_image_id: '' }
@@ -484,6 +597,7 @@ export default function AdminProductForm() {
                 <Upload size={32} className="text-gray-300 mb-2" />
                 <p className="text-gray-400 text-sm">{isAr ? 'اضغط أو اسحب لإضافة صور' : 'Click or drag to add images'}</p>
                 <p className="text-gray-300 text-xs mt-1">{isAr ? 'يمكنك إضافة عدة صور' : 'You can add multiple images'}</p>
+                <p className="text-gray-300 text-xs mt-1">{isAr ? 'اضغط على صورة لتعيينها كصورة رئيسية' : 'Tap an image to set it as the main image'}</p>
                 <input
                   ref={imageInputRef}
                   type="file"
@@ -502,6 +616,10 @@ export default function AdminProductForm() {
                         key={`existing-${img.id}`}
                         src={resolveMediaUrl(img.url)}
                         alt=""
+                        isPrimary={primaryRef?.kind === 'existing' && primaryRef.id === img.id}
+                        onSetPrimary={() => setExistingAsPrimary(img)}
+                        setPrimaryLabel={isAr ? 'تعيين كصورة رئيسية' : 'Set as main image'}
+                        primaryLabel={isAr ? 'رئيسية' : 'Main'}
                         onRemove={() => removeExistingImage(img)}
                         removeLabel={isAr ? 'حذف الصورة' : 'Remove image'}
                       />
@@ -511,6 +629,10 @@ export default function AdminProductForm() {
                         key={`new-${file.name}-${file.size}-${file.lastModified}-${i}`}
                         src={url}
                         alt=""
+                        isPrimary={primaryRef?.kind === 'new' && primaryRef.index === i}
+                        onSetPrimary={() => setNewAsPrimary(i)}
+                        setPrimaryLabel={isAr ? 'تعيين كصورة رئيسية' : 'Set as main image'}
+                        primaryLabel={isAr ? 'رئيسية' : 'Main'}
                         onRemove={() => removeNewImage(i)}
                         removeLabel={isAr ? 'إزالة الصورة' : 'Remove image'}
                       />

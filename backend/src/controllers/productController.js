@@ -16,7 +16,7 @@ const {
 const slugify = require('../utils/slugify');
 const { syncProductVariants, normalizeVariantsPayload } = require('../utils/productVariants');
 const { collectDescendantIds } = require('../utils/subcategoryTree');
-const { storefrontProductImagesInclude } = require('../utils/productIncludes');
+const { storefrontProductImagesInclude, adminDetailProductImagesInclude } = require('../utils/productIncludes');
 const { supportsHeroTickerImageId } = require('../utils/adaptProductSchema');
 const {
   setHeroTickerImageForProduct,
@@ -259,21 +259,15 @@ exports.getAdminProducts = async (req, res, next) => {
     const { count, rows } = await Product.findAndCountAll({
       where,
       include: [
-        { model: ProductImage, as: 'images', limit: 2 },
         { model: Category, as: 'category', attributes: ['id', 'name_ar', 'name_en', 'slug'] },
         { model: Subcategory, as: 'subcategory', attributes: ['id', 'name_ar', 'name_en', 'slug'] },
       ],
       order: orderMap[sort] || orderMap.newest,
       limit: lim,
       offset,
-      distinct: true,
     });
 
-    const data = rows.map((row) => {
-      const j = row.toJSON();
-      if (!j.thumbnail?.trim() && j.images?.[0]?.url) j.thumbnail = j.images[0].url;
-      return j;
-    });
+    const data = rows.map((row) => row.toJSON());
 
     res.json({
       success: true,
@@ -393,14 +387,24 @@ exports.getAdminProductById = async (req, res, next) => {
 
     const product = await Product.findByPk(id, {
       include: [
-        { model: ProductImage, as: 'images' },
+        adminDetailProductImagesInclude,
         { model: ProductVariant, as: 'variants' },
         { model: Category, as: 'category', attributes: ['id', 'name_ar', 'name_en'] },
         { model: Subcategory, as: 'subcategory', attributes: ['id', 'name_ar', 'name_en'] },
       ],
     });
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-    const data = await attachHeroTickerImageIds(product);
+    const attached = await attachHeroTickerImageIds(product);
+    const data = attached?.toJSON ? attached.toJSON() : attached;
+    data.images = sortProductImages(data.images, data.thumbnail);
+    const cover = pickProductCoverImage(data.images, data.thumbnail);
+    if (cover?.id && Array.isArray(data.images)) {
+      data.images = data.images.map((img) => ({
+        ...img,
+        is_primary: img.id === cover.id,
+      }));
+    }
+    if (cover?.url) data.thumbnail = cover.url;
     res.json({ success: true, data });
   } catch (err) { next(err); }
 };
@@ -411,7 +415,7 @@ exports.getProduct = async (req, res, next) => {
     const product = await Product.findOne({
       where: { slug, is_active: true },
       include: [
-        { model: ProductImage, as: 'images' },
+        adminDetailProductImagesInclude,
         { model: ProductVariant, as: 'variants' },
         { model: Category, as: 'category' },
         { model: Subcategory, as: 'subcategory' },
@@ -421,7 +425,11 @@ exports.getProduct = async (req, res, next) => {
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
     product.views += 1;
     await product.save();
-    res.json({ success: true, data: product });
+    const data = product.toJSON();
+    data.images = sortProductImages(data.images, data.thumbnail);
+    const cover = pickProductCoverImage(data.images, data.thumbnail);
+    if (cover?.url) data.thumbnail = cover.url;
+    res.json({ success: true, data });
   } catch (err) { next(err); }
 };
 
@@ -510,6 +518,62 @@ async function syncProductThumbnail(productId, imageUrl) {
   await product.update({ thumbnail: imageUrl });
 }
 
+async function setProductThumbnail(productId, imageUrl) {
+  if (!imageUrl) return;
+  await Product.update({ thumbnail: imageUrl }, { where: { id: productId } });
+}
+
+async function applyPrimaryProductImage(productId, imageId) {
+  const pid = parseInt(productId, 10);
+  const iid = parseInt(imageId, 10);
+  if (!Number.isFinite(pid) || !Number.isFinite(iid)) return null;
+
+  const image = await ProductImage.findOne({ where: { id: iid, product_id: pid } });
+  if (!image) return null;
+
+  await sequelize.transaction(async (transaction) => {
+    await ProductImage.update(
+      { is_primary: false },
+      { where: { product_id: pid }, transaction },
+    );
+    await ProductImage.update(
+      { is_primary: true, sort_order: 0 },
+      { where: { id: iid, product_id: pid }, transaction },
+    );
+    await Product.update({ thumbnail: image.url }, { where: { id: pid }, transaction });
+  });
+
+  return ProductImage.findByPk(iid);
+}
+
+function sortProductImages(images, thumbnail) {
+  const list = Array.isArray(images) ? [...images] : [];
+  const thumb = typeof thumbnail === 'string' ? thumbnail.trim() : '';
+  const score = (img) => {
+    let s = 0;
+    if (img?.is_primary === true || img?.is_primary === 1) s += 1000;
+    if (thumb && img?.url?.trim() === thumb) s += 500;
+    return s;
+  };
+  return list.sort((a, b) => {
+    const diff = score(b) - score(a);
+    if (diff !== 0) return diff;
+    return (a?.sort_order ?? 0) - (b?.sort_order ?? 0) || (a?.id ?? 0) - (b?.id ?? 0);
+  });
+}
+
+function pickProductCoverImage(images, thumbnail) {
+  const list = Array.isArray(images) ? images : [];
+  const thumb = typeof thumbnail === 'string' ? thumbnail.trim() : '';
+  const flagged = list.find((img) => img?.is_primary === true || img?.is_primary === 1);
+  if (flagged?.url) return flagged;
+  if (thumb) {
+    const byThumb = list.find((img) => img?.url && img.url.trim() === thumb);
+    if (byThumb) return byThumb;
+  }
+  return list[0] || null;
+}
+
 exports.deleteProductImage = async (req, res, next) => {
   try {
     const { id, imageId } = req.params;
@@ -562,6 +626,19 @@ exports.deleteProductImage = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+exports.setProductImagePrimary = async (req, res, next) => {
+  try {
+    const { id, imageId } = req.params;
+    const product = await Product.findByPk(id);
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    const image = await applyPrimaryProductImage(id, imageId);
+    if (!image) return res.status(404).json({ success: false, message: 'Image not found' });
+
+    res.json({ success: true, message: 'Primary image updated', data: image });
+  } catch (err) { next(err); }
+};
+
 exports.uploadProductImages = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -570,19 +647,29 @@ exports.uploadProductImages = async (req, res, next) => {
     if (!req.files || !req.files.length) return res.status(400).json({ success: false, message: 'No images uploaded' });
 
     const existingCount = await ProductImage.count({ where: { product_id: id } });
+    const primaryFromUpload = req.body?.primary_from_upload === '1' || req.body?.primary_from_upload === true;
+    const primaryIndex = Math.max(0, parseInt(req.body?.primary_index, 10) || 0);
+
     const images = await Promise.all(req.files.map((file, i) => {
       const url = uploadedFileUrl(file);
       if (!url) throw new Error('Invalid uploaded file');
+      const shouldBePrimary = primaryFromUpload && i === Math.min(primaryIndex, req.files.length - 1);
       return ProductImage.create({
         product_id: id,
         url,
         public_id: file.filename || file.public_id || `${id}-${Date.now()}-${i}`,
         sort_order: existingCount + i,
-        is_primary: existingCount === 0 && i === 0,
+        is_primary: shouldBePrimary,
       });
     }));
 
-    await syncProductThumbnail(id, images[0]?.url);
+    const primaryUploaded = images.find((img) => img.is_primary);
+    if (primaryUploaded) {
+      await applyPrimaryProductImage(id, primaryUploaded.id);
+    } else if (existingCount === 0 && images[0]) {
+      await applyPrimaryProductImage(id, images[0].id);
+    }
+
     res.json({ success: true, message: 'Images uploaded', data: images });
   } catch (err) { next(err); }
 };

@@ -1223,7 +1223,8 @@ html[lang="ar"] .hero-framer-copy--ar .hero-framer-copy__headline-line + .hero-f
     padding: 0;
     cursor: default;
     pointer-events: auto;
-    touch-action: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
     background-color: rgba(0, 0, 0, 0.45);
   }
@@ -1243,6 +1244,9 @@ html[lang="ar"] .hero-framer-copy--ar .hero-framer-copy__headline-line + .hero-f
     overflow: hidden;
     pointer-events: auto;
     -webkit-overflow-scrolling: touch;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
     left: 0;
     right: auto;
     border-right: 1px solid var(--color-border);
