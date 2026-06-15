@@ -17,6 +17,7 @@ import { trackStoreEvent } from '../../utils/analyticsTracker';
 import { fetchNavLinks } from '../../utils/navLinksCache';
 import { useDismissOnOutside } from '../../hooks/useDismissOnOutside';
 import { useBodyScrollLock, forceUnlockScroll } from '../../hooks/useBodyScrollLock';
+import { useGhostClickShield } from '../../hooks/useGhostClickShield';
 import { scrollToTop } from '../../utils/scrollToTop';
 
 export default function Header() {
@@ -117,11 +118,20 @@ export default function Header() {
     navigate('/');
   };
 
+  const armGhostClickShield = useGhostClickShield();
+
   const closeMenus = () => setMobileOpen(false);
 
+  /**
+   * Backdrop close handler.
+   * - Arms the ghost-click shield FIRST so iOS's synthetic click (fired
+   *   ~300 ms after touchend) can never reach background elements.
+   * - Then closes the menu.
+   */
   const handleBackdropClose = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    armGhostClickShield();
     closeMenus();
   };
 
@@ -396,6 +406,7 @@ export default function Header() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 onPointerDown={handleBackdropClose}
+                onTouchStart={handleBackdropClose}
                 className="site-header-aside-backdrop"
               />
               <motion.div
