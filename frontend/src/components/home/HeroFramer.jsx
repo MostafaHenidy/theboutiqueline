@@ -7,7 +7,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { resolveMediaUrl, getProductName } from '../../utils/helpers';
 
 /** Framer reference hero fallback when no banner is configured */
-const FRAMER_HERO_IMG = '/photos/KxF8H6qGSaJvRZEhALbixoOrQg.jpg';
+const FRAMER_HERO_IMG = '/photos/Banner2.PNG';
 
 const productLink = (p) => {
   if (!p?.slug || p.slug === 'products') return '/products';
@@ -207,7 +207,7 @@ function HeroTicker({ products, variant = 'desktop', className = '' }) {
   );
 }
 
-function HeroImagePanel({ src, children, parallaxRef, className = '' }) {
+function HeroImagePanel({ src, children, parallaxRef, className = '', imagePosition = 'center', imageScale = 1.03 }) {
   const { scrollYProgress } = useScroll({
     target: parallaxRef,
     offset: ['start start', 'end start'],
@@ -216,8 +216,13 @@ function HeroImagePanel({ src, children, parallaxRef, className = '' }) {
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      <motion.div className="absolute inset-0 scale-[1.03]" style={{ y: imgY }}>
-        <img src={src} alt="" className="w-full h-full object-cover object-center" />
+      <motion.div className="absolute inset-0" style={{ y: imgY, scale: imageScale }}>
+        <img
+          src={src}
+          alt=""
+          className="w-full h-full object-cover"
+          style={{ objectPosition: imagePosition }}
+        />
       </motion.div>
       <div className="absolute inset-0 bg-black/25 pointer-events-none" />
       <div className="absolute inset-0 hero-vignette pointer-events-none" />
@@ -310,9 +315,13 @@ export default function HeroFramer({
   heroProducts = [],
   fallbackHeroBg,
 }) {
-  const heroSrc = heroBanner?.image
+  const fallbackSrc = fallbackHeroBg || FRAMER_HERO_IMG;
+  const heroSrcDesktop = heroBanner?.image
     ? resolveMediaUrl(heroBanner.image)
-    : (fallbackHeroBg || FRAMER_HERO_IMG);
+    : fallbackSrc;
+  const heroSrcMobile = heroBanner?.mobile_image
+    ? resolveMediaUrl(heroBanner.mobile_image)
+    : heroSrcDesktop;
 
   const tickerProducts = useMemo(() => (
     (heroProducts || [])
@@ -325,7 +334,7 @@ export default function HeroFramer({
   return (
     <section id="hero" ref={heroRef} className="page-top-margin bg-theme">
       {/* ── MOBILE / TABLET (Framer layout) ── */}
-      <div className="lg:hidden pt-2.5 pb-0 hero-framer-mobile">
+      <div className="lg:hidden pb-0 hero-framer-mobile">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -333,7 +342,7 @@ export default function HeroFramer({
           className="rounded-sm overflow-hidden hero-framer-mobile__media"
         >
           <HeroImagePanel
-            src={heroSrc}
+            src={heroSrcMobile}
             parallaxRef={heroRef}
             className="relative h-full min-h-[var(--hero-framer-media-h)]"
           >
@@ -371,7 +380,13 @@ export default function HeroFramer({
             className="hero-framer-desktop__media"
           >
             <div className="hero-framer-desktop__media-inner rounded-sm overflow-hidden">
-              <HeroImagePanel src={heroSrc} parallaxRef={heroRef} className="hero-framer-desktop__panel">
+              <HeroImagePanel
+                src={heroSrcDesktop}
+                parallaxRef={heroRef}
+                className="hero-framer-desktop__panel"
+                imagePosition="center 18%"
+                imageScale={1}
+              >
                 <HeroCopy variant="desktop" />
               </HeroImagePanel>
             </div>

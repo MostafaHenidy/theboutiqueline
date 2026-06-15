@@ -42,12 +42,20 @@ function resolveApiBase() {
   return withApi.replace(/\/api\/api\b/, '/api');
 }
 
+const apiBase = resolveApiBase();
+
 const api = axios.create({
-  baseURL: resolveApiBase(),
+  baseURL: apiBase,
   timeout: 15000,
 });
 
-api.interceptors.request.use((config) => {
+/** Longer timeout for multipart uploads (banners, products). */
+export const apiUpload = axios.create({
+  baseURL: apiBase,
+  timeout: 120000,
+});
+
+function attachAuth(config) {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   /* FormData يجب ألا يُربط بـ application/json — وإلا يفسد multer ويصل الحقل كائن/مصفوفة */
@@ -62,23 +70,25 @@ api.interceptors.request.use((config) => {
     }
   }
   return config;
-});
+}
 
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      const requestedWithBearer = !!(error.config?.headers?.Authorization);
-      if (requestedWithBearer) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
+function handleAuthError(error) {
+  if (error.response?.status === 401) {
+    const requestedWithBearer = !!(error.config?.headers?.Authorization);
+    if (requestedWithBearer) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
       }
     }
-    return Promise.reject(error);
   }
-);
+  return Promise.reject(error);
+}
+
+api.interceptors.request.use(attachAuth);
+apiUpload.interceptors.request.use(attachAuth);
+api.interceptors.response.use((response) => response, handleAuthError);
+apiUpload.interceptors.response.use((response) => response, handleAuthError);
 
 export default api;

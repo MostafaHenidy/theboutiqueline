@@ -18,13 +18,13 @@ const P = {
   heroBg:      '/photos/aoQHDlgf24ATYxdu0msFV5QjCU.webp',
   aboutBg:     '/photos/4JyNJK5h7DVDfgID8lBKhy3M.jpg',
   dropsBanner: '/photos/2LEsj8dTfuADr3ESmjj0dA2TgA.webp',
-  catMen:        '/photos/vfprU5p4ewa5iy7pKy0FpdX3A.jpg',
-  catWomen:      '/photos/klOLqeBgESjqUBiaPQqHCqBgSw.webp',
-  catChildren:   '/photos/LIiUpXMeQEBfuNgYYaeO1PyL5BA.jpg',
-  catAccessories:'/photos/mqgBZP4952uBDqPQX6hHfyoX6fM.png',
+  catMen:        '/photos/cat-mens-clothing.jpg',
+  catWomen:      '/photos/cat-womens-clothing.jpg',
+  catChildren:   '/photos/cat-childrens-clothing.jpg',
+  catAccessories:'/photos/cat-accessories.jpg',
   catShoes:      '/photos/v0XCMMD3lRM3TU0xC5O5upOnFM.jpeg',
   catPerfumes:   '/photos/9634.jpg',
-  ctaBg:       '/photos/KxF8H6qGSaJvRZEhALbixoOrQg.jpg',
+  ctaBg:       '/photos/Banner2.PNG',
   shopCollectionBg: '/photos/shop-collection-cta.png',
   brandBg:     '/photos/RtzexXET68jVkKH97jdJpyotYOk.webp',
   ig1:         '/photos/fcUv7dMRjP5YP77zc5TUoOIeStQ.webp',
@@ -533,7 +533,11 @@ export default function Home() {
     setTimeout(() => { setActiveTab(tab); setTabFade(true); }, 200);
   };
 
-  const heroBanner   = banners.find((b) => b.type === 'hero');
+  const heroBanner = useMemo(() => {
+    const heroes = banners.filter((b) => b.type === 'hero');
+    if (!heroes.length) return undefined;
+    return [...heroes].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))[0];
+  }, [banners]);
 
   const tabProducts  = activeTab === 'men' ? menProducts : womenProducts;
   const showWomenSoon = activeTab === 'women' && !womenCategoryActive;

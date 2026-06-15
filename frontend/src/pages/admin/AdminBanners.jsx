@@ -1,12 +1,164 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Plus, Edit, Trash2, Upload, ToggleLeft, ToggleRight, ImageIcon, Check, Loader2 } from 'lucide-react';
-import api from '../../utils/api';
+import api, { apiUpload } from '../../utils/api';
 import toast from 'react-hot-toast';
 import { resolveMediaUrl } from '../../utils/helpers';
+import { compressHeroImage, uploadErrorMessage } from '../../utils/imageUpload';
 import { countSubcategoryNodes } from '../../utils/categoryTree';
 
 const empty = { title_ar: '', title_en: '', subtitle_ar: '', subtitle_en: '', link: '', type: 'hero', position: 0, is_active: true, mobile_image: '' };
+
+const FALLBACK_HERO = '/photos/Banner2.PNG';
+
+/** Simple hero background editor — upserts the single homepage hero banner. */
+function HeroBackgroundPanel({ banners, language, onSaved }) {
+  const isAr = language === 'ar';
+  const heroRecord = banners.find((b) => b.type === 'hero');
+  const [desktopFile, setDesktopFile] = useState(null);
+  const [mobileFile, setMobileFile] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const desktopInputRef = useRef(null);
+  const mobileInputRef = useRef(null);
+
+  const desktopPreview = desktopFile
+    ? URL.createObjectURL(desktopFile)
+    : (heroRecord?.image ? resolveMediaUrl(heroRecord.image) : FALLBACK_HERO);
+  const mobilePreview = mobileFile
+    ? URL.createObjectURL(mobileFile)
+    : (heroRecord?.mobile_image
+      ? resolveMediaUrl(heroRecord.mobile_image)
+      : (heroRecord?.image ? resolveMediaUrl(heroRecord.image) : FALLBACK_HERO));
+
+  const save = async () => {
+    if (!heroRecord?.id && !desktopFile) {
+      toast.error(isAr ? 'اختر صورة الهيرو أولاً' : 'Choose a hero image first');
+      return;
+    }
+    if (!desktopFile && !mobileFile && heroRecord?.id) {
+      toast.error(isAr ? 'اختر صورة جديدة للحفظ' : 'Choose a new image to save');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const fd = new FormData();
+      fd.append('type', 'hero');
+      fd.append('is_active', 'true');
+      fd.append('position', '0');
+      if (desktopFile) fd.append('image', await compressHeroImage(desktopFile));
+      if (mobileFile) fd.append('mobile_image', await compressHeroImage(mobileFile, { maxWidth: 1200 }));
+
+      if (heroRecord?.id) {
+        await apiUpload.put(`/admin/banners/${heroRecord.id}`, fd);
+      } else {
+        await apiUpload.post('/admin/banners', fd);
+      }
+
+      toast.success(isAr ? 'تم تحديث خلفية الهيرو' : 'Hero background updated');
+      setDesktopFile(null);
+      setMobileFile(null);
+      onSaved();
+    } catch (err) {
+      toast.error(uploadErrorMessage(err, isAr));
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-primary-50 border border-primary-100 rounded-2xl px-5 py-4 text-sm text-primary-900 flex items-start gap-3">
+        <ImageIcon size={18} className="mt-0.5 flex-shrink-0" />
+        <div>
+          <p className="font-semibold mb-0.5">
+            {isAr ? 'خلفية الهيرو — الصفحة الرئيسية' : 'Homepage hero background'}
+          </p>
+          <p className="text-primary-800/80">
+            {isAr
+              ? 'ارفع صورة جديدة للبانر الرئيسي. تظهر مباشرة على الموقع بعد الحفظ.'
+              : 'Upload a new image for the main homepage banner. It goes live after you save.'}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="relative aspect-[16/10] bg-gray-100">
+            <img src={desktopPreview} alt="" className="w-full h-full object-cover" />
+            <span className="absolute top-2 start-2 text-[10px] font-bold bg-white/90 px-2 py-1 rounded">
+              {isAr ? 'ديسكتوب / تابلت' : 'Desktop / tablet'}
+            </span>
+          </div>
+          <div className="p-4 space-y-3">
+            <p className="text-sm font-semibold text-gray-800">
+              {isAr ? 'صورة الهيرو (عرض)' : 'Hero image (landscape)'}
+            </p>
+            <p className="text-xs text-gray-500">
+              {isAr ? 'يفضل ~1920×900 أو أعرض' : 'Prefer ~1920×900 or wider'}
+            </p>
+            <button
+              type="button"
+              onClick={() => desktopInputRef.current?.click()}
+              className="w-full flex items-center justify-center gap-2 border border-dashed border-gray-200 rounded-xl py-3 text-sm text-gray-500 hover:border-primary hover:text-primary transition-colors"
+            >
+              <Upload size={16} />
+              {desktopFile ? desktopFile.name : (isAr ? 'اختر صورة' : 'Choose image')}
+            </button>
+            <input ref={desktopInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => setDesktopFile(e.target.files?.[0] || null)} />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="relative aspect-[3/4] max-h-72 bg-gray-100 mx-auto w-full">
+            <img src={mobilePreview} alt="" className="w-full h-full object-cover" />
+            <span className="absolute top-2 start-2 text-[10px] font-bold bg-white/90 px-2 py-1 rounded">
+              {isAr ? 'موبايل' : 'Mobile'}
+            </span>
+          </div>
+          <div className="p-4 space-y-3">
+            <p className="text-sm font-semibold text-gray-800">
+              {isAr ? 'صورة الموبايل (اختياري)' : 'Mobile image (optional)'}
+            </p>
+            <p className="text-xs text-gray-500">
+              {isAr ? 'Portrait للجوال — إن تركتها تُستخدم صورة الديسكتوب' : 'Portrait for phones — if empty, desktop image is used'}
+            </p>
+            <button
+              type="button"
+              onClick={() => mobileInputRef.current?.click()}
+              className="w-full flex items-center justify-center gap-2 border border-dashed border-amber-200 bg-amber-50/50 rounded-xl py-3 text-sm text-gray-500 hover:border-primary hover:text-primary transition-colors"
+            >
+              <Upload size={16} />
+              {mobileFile ? mobileFile.name : (isAr ? 'اختر صورة موبايل' : 'Choose mobile image')}
+            </button>
+            <input ref={mobileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => setMobileFile(e.target.files?.[0] || null)} />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving || (!desktopFile && !mobileFile)}
+          className="btn-primary px-8 py-2.5 flex items-center gap-2 disabled:opacity-50"
+        >
+          {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+          {isAr ? 'حفظ خلفية الهيرو' : 'Save hero background'}
+        </button>
+        {heroRecord && !heroRecord.is_active && (
+          <p className="text-sm text-amber-600">
+            {isAr ? 'تنبيه: البانر الحالي غير مفعّل — سيتم تفعيله عند الحفظ' : 'Note: current hero is inactive — saving will activate it'}
+          </p>
+        )}
+        {!heroRecord && (
+          <p className="text-sm text-gray-500">
+            {isAr ? 'لا يوجد بانر محفوظ — يُستخدم الافتراضي حتى ترفع صورة' : 'No saved hero yet — default image is used until you upload'}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /* ─── Category Image Card ─── */
 function CategoryImageCard({ cat, language, onSaved }) {
@@ -117,7 +269,7 @@ export default function AdminBanners() {
   const { language } = useSelector((s) => s.ui);
   const isAr = language === 'ar';
 
-  const [tab, setTab]           = useState('banners');   // 'banners' | 'categories'
+  const [tab, setTab]           = useState('hero');   // 'hero' | 'banners' | 'categories'
   const [banners, setBanners]   = useState([]);
   const [categories, setCategories] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -141,16 +293,15 @@ export default function AdminBanners() {
         if (v === undefined || v === null) return;
         fd.append(k, typeof v === 'boolean' ? (v ? 'true' : 'false') : String(v));
       });
-      if (imageFile) fd.append('image', imageFile);
-      if (mobileImageFile) fd.append('mobile_image', mobileImageFile);
+      if (imageFile) fd.append('image', await compressHeroImage(imageFile));
+      if (mobileImageFile) fd.append('mobile_image', await compressHeroImage(mobileImageFile, { maxWidth: 1200 }));
       /* لا تضبط Content-Type يدوياً — axios يضيف boundary تلقائياً؛ بدونه الطلب يفشل */
-      if (editId) await api.put(`/admin/banners/${editId}`, fd);
-      else await api.post('/admin/banners', fd);
+      if (editId) await apiUpload.put(`/admin/banners/${editId}`, fd);
+      else await apiUpload.post('/admin/banners', fd);
       toast.success(isAr ? 'تم الحفظ' : 'Saved');
       fetchBanners(); setShowForm(false); setForm(empty); setEditId(null); setImageFile(null); setMobileImageFile(null);
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || '';
-      toast.error(msg || (isAr ? 'فشل الحفظ' : 'Save failed'));
+      toast.error(uploadErrorMessage(err, isAr));
     }
   };
 
@@ -184,7 +335,13 @@ export default function AdminBanners() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit flex-wrap">
+        <button
+          onClick={() => setTab('hero')}
+          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === 'hero' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          {isAr ? 'خلفية الهيرو' : 'Hero Background'}
+        </button>
         <button
           onClick={() => setTab('banners')}
           className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === 'banners' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
@@ -198,6 +355,14 @@ export default function AdminBanners() {
           {isAr ? 'صور الكاتيجوري (الهوم)' : 'Category Images (Home)'}
         </button>
       </div>
+
+      {tab === 'hero' && (
+        <HeroBackgroundPanel
+          banners={banners}
+          language={language}
+          onSaved={fetchBanners}
+        />
+      )}
 
       {/* ── TAB: Banners ── */}
       {tab === 'banners' && (

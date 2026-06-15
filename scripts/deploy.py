@@ -88,6 +88,6 @@ for fname in os.listdir(DIST):
         run_pscp(fpath, f"{REMOTE}/{fname}")
 
 print("\n" + "=" * 60)
-print(" ✅  Deploy complete!")
-print(f"    https://theboutiqueline.com")
+print(" Deploy complete!")
+print("    https://theboutiqueline.com")
 print("=" * 60)

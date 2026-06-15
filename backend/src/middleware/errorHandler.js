@@ -24,6 +24,12 @@ const errorHandler = (err, req, res, next) => {
     statusCode = 401;
     message = 'Invalid token';
   }
+  if (err.name === 'MulterError') {
+    statusCode = 413;
+    message = err.code === 'LIMIT_FILE_SIZE'
+      ? 'Image too large (max 10MB)'
+      : (err.message || 'Upload failed');
+  }
 
   if (process.env.NODE_ENV === 'development') {
     console.error(err.stack);

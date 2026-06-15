@@ -118,8 +118,9 @@ export default defineConfig(async ({ mode }) => {
           target,
           changeOrigin: true,
           configure: (proxy) => {
-            proxy.on('proxyReq', (proxyReq) => {
-              proxyReq.setTimeout(8000, () => proxyReq.destroy());
+            proxy.on('proxyReq', (proxyReq, req) => {
+              const isUpload = req.method === 'POST' || req.method === 'PUT';
+              proxyReq.setTimeout(isUpload ? 120000 : 8000, () => proxyReq.destroy());
             });
             proxy.on('error', (err, _req, res) => {
               const lan = getDevApiHost();
