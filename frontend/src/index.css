@@ -171,7 +171,7 @@ html[lang="ar"] .hero-framer-copy--ar .hero-framer-copy__headline-line + .hero-f
   /* ── Sticky storefront header ── */
   :root {
     --site-header-main-height: 64px;
-    --site-header-height: var(--site-header-main-height);
+    --site-header-height: calc(var(--site-header-main-height) + env(safe-area-inset-top, 0px));
     --site-header-mobile-logo-size: 50px;
     --site-header-mobile-icon-size: 16px;
     --site-header-desktop-icon-size: 24px;
@@ -2363,7 +2363,7 @@ html[lang="ar"] .hero-framer-copy--ar .hero-framer-copy__headline-line + .hero-f
 
 /* Desktop hero — equal columns; headline overlaid bottom-start on image */
 .hero-framer-desktop {
-  --hero-framer-desktop-h: min(90vh, 900px);
+  --hero-framer-desktop-h: 900px;
   padding: 10px;
 }
 .hero-framer-desktop__pair {
@@ -2374,11 +2374,19 @@ html[lang="ar"] .hero-framer-copy--ar .hero-framer-copy__headline-line + .hero-f
   height: var(--hero-framer-desktop-h);
 }
 .hero-framer-desktop__media {
-  flex: 1.15 1 0;
+  flex: 0 0 58%;
   min-width: 0;
   min-height: 0;
   height: 100%;
   display: flex;
+}
+.hero-framer-hero-bg {
+  background-size: cover;
+  background-repeat: no-repeat;
+  transition: none !important;
+  animation: none !important;
+  transform: none !important;
+  will-change: auto;
 }
 .hero-framer-desktop__media-inner {
   position: relative;
@@ -2392,6 +2400,9 @@ html[lang="ar"] .hero-framer-copy--ar .hero-framer-copy__headline-line + .hero-f
   inset: 0;
   width: 100%;
   height: 100%;
+}
+.hero-framer-desktop__media-inner .hero-framer-desktop__panel .hero-framer-hero-bg {
+  background-position: center top;
 }
 .hero-framer-copy {
   display: flex;
@@ -2495,10 +2506,22 @@ html[lang="ar"] .hero-framer-copy--ar .hero-framer-copy__headline-line + .hero-f
 /* Mobile: image + ticker share the same height token */
 .hero-framer-mobile {
   --hero-framer-media-h: min(58svh, 520px);
+  margin-top: 0;
+  padding-top: 0;
 }
 .hero-framer-mobile__media {
   min-height: var(--hero-framer-media-h);
   height: var(--hero-framer-media-h);
+  border-radius: 0;
+}
+@media (max-width: 1023px) {
+  #hero.page-top-margin {
+    margin-top: 0;
+    padding-top: 0;
+  }
+  #hero .hero-framer-mobile__media.rounded-sm {
+    border-radius: 0;
+  }
 }
 .hero-framer-mobile-rail {
   display: flex;

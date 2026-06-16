@@ -84,6 +84,25 @@ const revealStyle = (inView, delay = 0) => ({
   willChange: 'opacity, transform',
 });
 
+function preloadImage(url) {
+  return new Promise((resolve) => {
+    if (!url) {
+      resolve();
+      return;
+    }
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => resolve();
+    img.src = url;
+  });
+}
+
+function pickHeroBannerUrl(banner, fallback) {
+  if (banner?.mobile_image) return resolveMediaUrl(banner.mobile_image);
+  if (banner?.image) return resolveMediaUrl(banner.image);
+  return fallback;
+}
+
 /* ════════════════════════════════════════════
    SECTION HEADER component
 ════════════════════════════════════════════ */
@@ -364,6 +383,7 @@ export default function Home() {
   const [latestDrops,  setLatestDrops]  = useState([]);
   const [categories,   setCategories]   = useState([]);
   const [banners,      setBanners]      = useState([]);
+  const [homeHeroSrc, setHomeHeroSrc] = useState(null);
   const [heroProducts, setHeroProducts] = useState([]);
   const [activeTab,    setActiveTab]    = useState('men');
   const [menProducts,  setMenProducts]  = useState([]);
@@ -484,26 +504,29 @@ export default function Home() {
         setCategories(catRes.data.data || []);
         setHeroProducts(heroData);
         const activeBanners = (bannerRes.data.data || []).filter((b) => b.is_active);
+        const heroBannerData = [...activeBanners]
+          .filter((b) => b.type === 'hero')
+          .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))[0];
+        const heroUrl = pickHeroBannerUrl(heroBannerData, P.ctaBg);
+        await preloadImage(P.ctaBg);
+        await preloadImage(heroUrl);
+        if (cancelled) return;
+        setHomeHeroSrc(heroUrl);
         setBanners(activeBanners);
       } catch (err) {
         if (cancelled) return;
         setHeroProducts([]);
         setLatestDrops([]);
         setSaleProducts([]);
+        setHomeHeroSrc(P.ctaBg);
       }
       if (!cancelled) setLoading(false);
     };
 
     loadHomeData();
 
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') loadHomeData();
-    };
-    document.addEventListener('visibilitychange', onVisible);
-
     return () => {
       cancelled = true;
-      document.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
 
@@ -551,12 +574,20 @@ export default function Home() {
         <meta name="description" content={t('meta_home_description')} />
       </Helmet>
 
-      <HeroFramer
-        heroRef={heroRef}
-        heroBanner={heroBanner}
-        heroProducts={heroProducts}
-        fallbackHeroBg={P.ctaBg}
-      />
+      {homeHeroSrc ? (
+        <HeroFramer
+          heroRef={heroRef}
+          heroSrc={homeHeroSrc}
+          heroBanner={heroBanner}
+          heroProducts={heroProducts}
+          fallbackHeroBg={P.ctaBg}
+        />
+      ) : (
+        <section id="hero" className="page-top-margin bg-theme" aria-hidden="true">
+          <div className="hero-framer-mobile lg:hidden min-h-[var(--hero-framer-media-h)]" />
+          <div className="hidden lg:block hero-framer-desktop min-h-[var(--hero-framer-desktop-h)]" />
+        </section>
+      )}
 
       {/* ════════════════════════════════
           1. NEW ARRIVALS (with tab toggle)

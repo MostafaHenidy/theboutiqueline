@@ -1,6 +1,5 @@
 import { useMemo, useRef, useLayoutEffect, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { ArrowUpRight } from 'lucide-react';
@@ -30,8 +29,6 @@ function getTickerImageSrc(product) {
   }
   return null;
 }
-
-const easeOut = [0.22, 1, 0.36, 1];
 
 /** Keep the last N words on one line to avoid typographic orphans in headlines. */
 function bindWords(text, count = 2) {
@@ -207,23 +204,17 @@ function HeroTicker({ products, variant = 'desktop', className = '' }) {
   );
 }
 
-function HeroImagePanel({ src, children, parallaxRef, className = '', imagePosition = 'center', imageScale = 1.03 }) {
-  const { scrollYProgress } = useScroll({
-    target: parallaxRef,
-    offset: ['start start', 'end start'],
-  });
-  const imgY = useTransform(scrollYProgress, [0, 1], ['0%', '18%']);
-
+function HeroImagePanel({ src, children, className = '', imagePosition = 'center top' }) {
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      <motion.div className="absolute inset-0" style={{ y: imgY, scale: imageScale }}>
-        <img
-          src={src}
-          alt=""
-          className="w-full h-full object-cover"
-          style={{ objectPosition: imagePosition }}
-        />
-      </motion.div>
+      <div
+        className="absolute inset-0 hero-framer-hero-bg"
+        style={{
+          backgroundImage: `url("${src}")`,
+          backgroundPosition: imagePosition,
+        }}
+        aria-hidden="true"
+      />
       <div className="absolute inset-0 bg-black/25 pointer-events-none" />
       <div className="absolute inset-0 hero-vignette pointer-events-none" />
       <div className="absolute inset-0 z-10 pointer-events-none">{children}</div>
@@ -252,10 +243,7 @@ function HeroCopy({ variant = 'mobile', className = '' }) {
       lang={language}
       className={`hero-framer-copy hero-framer-copy--${variant} ${isEn ? 'hero-framer-copy--en' : 'hero-framer-copy--ar'} ${className}`}
     >
-      <motion.p
-        initial={{ opacity: 0, y: isDesktop ? 20 : 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2, ease: easeOut }}
+      <p
         className={`font-mono ${isDesktop ? 'text-xs' : 'text-base'} mb-3 md:mb-4 ${isEn ? 'uppercase' : ''}`}
         style={{
           letterSpacing: isEn ? '0.24em' : '0.08em',
@@ -264,27 +252,17 @@ function HeroCopy({ variant = 'mobile', className = '' }) {
         }}
       >
         {bindWords(t('hero_eyebrow'))}
-      </motion.p>
+      </p>
       <h1
         className={`hero-framer-copy__headline${isEn ? ' uppercase' : ''}`}
         style={headlineStyle}
       >
-        <motion.span
-          className="hero-framer-copy__headline-line block"
-          initial={{ opacity: 0, y: isDesktop ? 40 : 32 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.35, ease: easeOut }}
-        >
+        <span className="hero-framer-copy__headline-line block">
           {bindWords(t('hero_line1'))}
-        </motion.span>
-        <motion.span
-          className="hero-framer-copy__headline-line block"
-          initial={{ opacity: 0, y: isDesktop ? 40 : 32 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.5, ease: easeOut }}
-        >
+        </span>
+        <span className="hero-framer-copy__headline-line block">
           {bindWords(t('hero_line2'))}
-        </motion.span>
+        </span>
       </h1>
     </div>
   );
@@ -293,16 +271,12 @@ function HeroCopy({ variant = 'mobile', className = '' }) {
 function ShopNowCta({ className = '' }) {
   const { t } = useTranslation();
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.55, ease: easeOut }}
-    >
+    <div>
       <Link to="/products" className={`hero-framer-cta ${className}`}>
         <span className="hero-framer-cta__label">{t('shop_now')}</span>
         <ArrowUpRight size={20} strokeWidth={2} className="hero-framer-cta__arrow" />
       </Link>
-    </motion.div>
+    </div>
   );
 }
 
@@ -311,17 +285,13 @@ function ShopNowCta({ className = '' }) {
  */
 export default function HeroFramer({
   heroRef,
+  heroSrc,
   heroBanner,
   heroProducts = [],
   fallbackHeroBg,
 }) {
   const fallbackSrc = fallbackHeroBg || FRAMER_HERO_IMG;
-  const heroSrcDesktop = heroBanner?.image
-    ? resolveMediaUrl(heroBanner.image)
-    : fallbackSrc;
-  const heroSrcMobile = heroBanner?.mobile_image
-    ? resolveMediaUrl(heroBanner.mobile_image)
-    : heroSrcDesktop;
+  const displaySrc = heroSrc || fallbackSrc;
 
   const tickerProducts = useMemo(() => (
     (heroProducts || [])
@@ -335,69 +305,40 @@ export default function HeroFramer({
     <section id="hero" ref={heroRef} className="page-top-margin bg-theme">
       {/* ── MOBILE / TABLET (Framer layout) ── */}
       <div className="lg:hidden pb-0 hero-framer-mobile">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, ease: easeOut }}
-          className="rounded-sm overflow-hidden hero-framer-mobile__media"
-        >
+        <div className="overflow-hidden hero-framer-mobile__media">
           <HeroImagePanel
-            src={heroSrcMobile}
-            parallaxRef={heroRef}
+            src={displaySrc}
             className="relative h-full min-h-[var(--hero-framer-media-h)]"
           >
             <HeroCopy variant="mobile" />
           </HeroImagePanel>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4, ease: easeOut }}
-          className="overflow-hidden bg-surface-card hero-framer-mobile-rail"
-        >
+        <div className="overflow-hidden bg-surface-card hero-framer-mobile-rail">
           {showTicker && (
             <div className="hero-framer-rail-frame hero-framer-rail-frame--mobile">
               <HeroTicker products={tickerProducts} variant="mobile" />
             </div>
           )}
           <ShopNowCta />
-        </motion.div>
+        </div>
       </div>
 
       {/* ── DESKTOP: image + ticker equal height; CTA full width below ── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, ease: easeOut }}
-        className="hidden lg:block hero-framer-desktop"
-      >
+      <div className="hidden lg:block hero-framer-desktop">
         <div className="hero-framer-desktop__pair">
-          <motion.div
-            initial={{ opacity: 0, x: -24 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: easeOut }}
-            className="hero-framer-desktop__media"
-          >
+          <div className="hero-framer-desktop__media">
             <div className="hero-framer-desktop__media-inner rounded-sm overflow-hidden">
               <HeroImagePanel
-                src={heroSrcDesktop}
-                parallaxRef={heroRef}
+                src={displaySrc}
                 className="hero-framer-desktop__panel"
-                imagePosition="center 18%"
-                imageScale={1}
               >
                 <HeroCopy variant="desktop" />
               </HeroImagePanel>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 24 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.15, ease: easeOut }}
-            className="hero-framer-desktop__rail bg-surface-card"
-          >
+          <div className="hero-framer-desktop__rail bg-surface-card">
             <div className="hero-framer-rail-frame">
               {showTicker && <HeroTicker products={tickerProducts} variant="desktop" />}
               <div className="hero-framer-desktop__logo">
@@ -410,9 +351,9 @@ export default function HeroFramer({
               </div>
             </div>
             <ShopNowCta />
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }
